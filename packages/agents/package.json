@@ -1,0 +1,26 @@
+{
+  "name": "@app/agents",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Example agent with Zod and instructions for adding tools",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "clean": "rm -rf node_modules dist",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "fix": "eslint --fix --quiet ."
+  },
+  "dependencies": {
+    "ai": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@kyoto/eslint-config": "workspace:*",
+    "@types/node": "catalog:",
+    "tsconfig": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

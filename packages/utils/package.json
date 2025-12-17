@@ -1,0 +1,26 @@
+{
+  "name": "@app/utils",
+  "type": "module",
+  "version": "0.0.1",
+  "description": "JavaScript utilities",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "clean": "rm -rf node_modules dist",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . && prettier --ignore-path='../../.prettierignore' --check .",
+    "fix": "eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
+  },
+  "devDependencies": {
+    "@kyoto/eslint-config": "workspace:*",
+    "@types/node": "catalog:",
+    "tsconfig": "workspace:*",
+    "typescript": "catalog:"
+  },
+  "dependencies": {
+    "@sindresorhus/is": "^7.1.1",
+    "ts-dedent": "^2.2.0"
+  }
+}

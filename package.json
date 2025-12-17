@@ -1,0 +1,67 @@
+{
+  "name": "kyoto-vibe-git-template",
+  "repository": "stevepeak/kyoto-template",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Kyoto",
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "config/*",
+      "packages/*"
+    ],
+    "catalog": {
+      "@sentry/node": "^10.23.0",
+      "@sentry/opentelemetry": "^10.25.0",
+      "@types/node": "^22.18.10",
+      "@trpc/server": "11.6.0",
+      "ai": "^5.0.107",
+      "drizzle-orm": "^0.45.0",
+      "eslint": "^9.37.0",
+      "import-in-the-middle": "^2.0.0",
+      "posthog-js": "^1.208.3",
+      "posthog-node": "^5.13.2",
+      "superjson": "^2.2.2",
+      "typescript": "^5.9.3",
+      "zod": "^3.24.1"
+    }
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=@app/web",
+    "build": "turbo run build",
+    "preview": "turbo run preview",
+    "prepare": "husky || true",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "knip": "knip",
+    "knip:fix": "knip --fix",
+    "ci": "bun run typecheck && bun run lint && bun run knip && bun run build",
+    "fix": "turbo run fix",
+    "clean": "turbo run clean | rm -rf .turbo",
+    "kill": "&& lsof -i :3000 -t | xargs -r kill && lsof -i :3001 -t | xargs -r kill && lsof -i :6006 -t | xargs -r kill"
+  },
+  "devDependencies": {
+    "@ocavue/eslint-config": "^3.6.0",
+    "@ocavue/tsconfig": "^0.5.0",
+    "@usekyoto/cli": "^0.0.13",
+    "eslint": "^9.37.0",
+    "knip": "^5.68.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.1",
+    "prettier": "^3.6.2",
+    "turbo": "^2.6.0",
+    "typescript": "^5.9.3"
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx,json,md,mdx}": [
+      "prettier --write"
+    ]
+  },
+  "packageManager": "bun@1.1.42",
+  "engines": {
+    "bun": "1"
+  }
+}

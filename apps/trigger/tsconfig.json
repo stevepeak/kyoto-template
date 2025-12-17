@@ -1,0 +1,16 @@
+{
+  "extends": "@ocavue/tsconfig/dom/app.json",
+  "compilerOptions": {
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dist",
+    "baseUrl": ".",
+    "skipLibCheck": true,
+    "incremental": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*", "trigger/**/*", "trigger.config.ts"],
+  "exclude": ["node_modules", "dist", ".turbo"]
+}
