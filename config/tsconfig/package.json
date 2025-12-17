@@ -1,0 +1,15 @@
+{
+  "name": "tsconfig",
+  "version": "0.0.0",
+  "private": true,
+  "files": [
+    "bun.json"
+  ],
+  "devDependencies": {
+    "@dexaai/config": "^0.0.10",
+    "typescript": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
