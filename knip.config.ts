@@ -12,11 +12,13 @@ const config: KnipConfig = {
         '**/coverage/**',
         '**/*.d.ts',
         '**/*.config.ts',
+        '**/*.config.cjs',
+        '**/*.config.js',
         '**/seed.sql',
         '**/schema.sql',
         '**/migrations/**',
       ],
-      ignoreDependencies: ['tailwindcss'],
+      ignoreDependencies: [],
     },
     'apps/web': {
       entry: ['app/**/*.{ts,tsx}'],
@@ -67,7 +69,7 @@ const config: KnipConfig = {
     '**/types.gen.ts',
     '**/migrations/**',
   ],
-  ignoreDependencies: ['@types/*'],
+  ignoreDependencies: [],
 }
 
 export default config

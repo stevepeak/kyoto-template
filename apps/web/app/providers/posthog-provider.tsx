@@ -15,8 +15,10 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
       return
     }
 
+    // eslint-disable-next-line no-process-env
     const apiKey = process.env.NEXT_PUBLIC_POSTHOG_API_KEY
     const host =
+      // eslint-disable-next-line no-process-env
       process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com'
 
     if (!apiKey) {

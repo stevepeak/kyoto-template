@@ -1,5 +1,8 @@
-import { router, publicProcedure } from './trpc'
+import { type exampleAgentTask } from '@app/trigger'
+import { tasks } from '@trigger.dev/sdk'
 import { z } from 'zod'
+
+import { publicProcedure, router } from './trpc'
 
 export type { Context } from './context'
 
@@ -13,8 +16,26 @@ const helloRouter = router({
     }),
 })
 
+const triggerRouter = router({
+  exampleAgent: publicProcedure
+    .input(z.object({ name: z.string().optional() }))
+    .mutation(async ({ input }) => {
+      const handle = await tasks.trigger<typeof exampleAgentTask>(
+        'example-agent',
+        {
+          name: input.name,
+        },
+      )
+
+      return {
+        runId: handle.id,
+      }
+    }),
+})
+
 export const appRouter = router({
   hello: helloRouter,
+  trigger: triggerRouter,
 })
 
 // Export type router type signature,

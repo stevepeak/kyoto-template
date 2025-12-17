@@ -6,6 +6,6 @@ export default defineConfig({
   dialect: 'postgresql',
   dbCredentials: {
     // eslint-disable-next-line no-process-env
-    url: process.env.DATABASE_URL,
+    url: process.env.DATABASE_URL!,
   },
 })

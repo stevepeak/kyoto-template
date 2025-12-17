@@ -45,6 +45,7 @@ async function startSdk(): Promise<Tracer | undefined> {
     }
 
     sdk = new NodeSDK({
+      // @ts-expect-error - SentrySpanProcessor is compatible but has version mismatch
       spanProcessor: new SentrySpanProcessor(),
     })
 

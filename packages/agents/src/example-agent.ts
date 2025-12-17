@@ -70,7 +70,7 @@ export type ExampleAgentOutput = z.infer<typeof exampleAgentOutputSchema>
 
 // Define the input type
 export type ExampleAgentInput = {
-  model: Parameters<typeof Agent>[0]['model']
+  model: ConstructorParameters<typeof Agent>[0]['model']
   name?: string
 }
 

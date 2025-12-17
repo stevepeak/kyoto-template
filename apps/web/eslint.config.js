@@ -4,6 +4,6 @@ import { config } from '@kyoto/eslint-config/bun.js'
 export default [
   ...config,
   {
-    ignores: ['.next/**'],
+    ignores: ['.next/**', '.storybook/**'],
   },
 ]

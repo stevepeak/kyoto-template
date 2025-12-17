@@ -1,8 +1,14 @@
 {
   "dependencies": {
+    "@ai-sdk/openai": "catalog:",
+    "@app/agents": "workspace:*",
+    "@app/config": "workspace:*",
+    "@opentelemetry/api": "catalog:",
+    "@opentelemetry/sdk-node": "catalog:",
     "@sentry/node": "catalog:",
     "@sentry/opentelemetry": "catalog:",
     "@trigger.dev/sdk": "^4.3.0",
+    "ai": "catalog:",
     "import-in-the-middle": "catalog:",
     "zod": "catalog:"
   },
