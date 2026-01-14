@@ -88,7 +88,7 @@ export function TriggerCard() {
             </div>
           )}
 
-          {isCompleted && output && (
+          {isCompleted && output != null && (
             <div className="rounded-md bg-green-50 p-3">
               <p className="text-xs font-medium text-green-800">Output:</p>
               <pre className="mt-1 overflow-x-auto text-xs text-green-700">

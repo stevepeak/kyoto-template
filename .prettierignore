@@ -21,4 +21,5 @@ temp
 dist-types
 *.tsbuildinfo
 apps/web/components/ui
+next-env.d.ts
 packages/db/migrations
