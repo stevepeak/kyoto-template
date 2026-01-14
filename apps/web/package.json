@@ -16,14 +16,16 @@
   },
   "dependencies": {
     "@app/api": "workspace:*",
+    "@tanstack/react-query": "catalog:",
+    "@trigger.dev/react-hooks": "^4.3.2",
     "@trpc/client": "catalog:",
     "@trpc/react-query": "catalog:",
     "@trpc/server": "catalog:",
-    "@tanstack/react-query": "catalog:",
     "next": "^16.0.3",
     "posthog-js": "catalog:",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "sonner": "^2.0.7"
   },
   "devDependencies": {
     "@kyoto/eslint-config": "workspace:*",

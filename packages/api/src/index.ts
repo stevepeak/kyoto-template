@@ -29,6 +29,7 @@ const triggerRouter = router({
 
       return {
         runId: handle.id,
+        publicAccessToken: handle.publicAccessToken,
       }
     }),
 })
