@@ -6,8 +6,19 @@ import { PostHogProvider } from './providers/posthog-provider'
 import { TRPCProvider } from './providers/trpc-provider'
 
 export const metadata: Metadata = {
-  title: 'Hello World',
-  description: 'A simple Next.js app',
+  title: {
+    template: '%s | Kyoto',
+    default: 'Kyoto',
+  },
+  description: 'A modern Next.js application template',
+  icons: {
+    icon: '/icon.svg',
+  },
+  openGraph: {
+    title: 'Kyoto',
+    description: 'A modern Next.js application template',
+    type: 'website',
+  },
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {
