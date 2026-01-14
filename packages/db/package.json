@@ -11,7 +11,7 @@
   "scripts": {
     "clean": "rm -rf node_modules dist",
     "db:generate": "bun --env-file=../../.env drizzle-kit generate",
-    "db:migrate": "bun --env-file=../../.env tsx src/migrate.ts",
+    "db:migrate": "bun --env-file=../../.env run src/migrate.ts",
     "db:studio": "bun --env-file=../../.env drizzle-kit studio",
     "db:push": "bun --env-file=../../.env drizzle-kit push",
     "db:drop": "bun --env-file=../../.env drizzle-kit drop",

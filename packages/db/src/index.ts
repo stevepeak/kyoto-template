@@ -48,7 +48,7 @@ function resolveDatabaseUrl(options: CreateDbOptions): string {
   // Allow builds/tests to import DB without requiring env.
   // Connection is lazy until the first query, so this won't break `next build`.
   if (!url) {
-    return 'postgresql://placeholder:placeholder@localhost:5432/kyoto'
+    return 'postgres://postgres@localhost:5432/kyoto'
   }
 
   return url

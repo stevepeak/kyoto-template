@@ -16,11 +16,13 @@
   },
   "dependencies": {
     "@app/api": "workspace:*",
+    "@app/db": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "@trigger.dev/react-hooks": "^4.3.2",
     "@trpc/client": "catalog:",
     "@trpc/react-query": "catalog:",
     "@trpc/server": "catalog:",
+    "better-auth": "^1.4.12",
     "next": "^16.0.3",
     "posthog-js": "catalog:",
     "react": "^19.2.0",
