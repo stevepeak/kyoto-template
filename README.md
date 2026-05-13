@@ -270,6 +270,24 @@ Deploy background jobs:
 bun --cwd apps/trigger deploy
 ```
 
+### GitHub Actions Secrets
+
+The CI workflow (`.github/workflows/ci.yml`) runs database migrations and deploys to Cloudflare on every push to `main`. Add the following secrets at **GitHub → Settings → Secrets and variables → Actions → New repository secret**:
+
+| Secret                  | Used by             | Where to find it                                                                                                                                                                                                                                           |
+| ----------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`          | `deploy-migrations` | Your PostgreSQL provider's dashboard. For [Neon](https://neon.tech), open the project → **Connection Details** → copy the pooled connection string. For [Supabase](https://supabase.com), open **Project Settings → Database → Connection string (URI)**.  |
+| `CLOUDFLARE_API_TOKEN`  | `deploy-cloudflare` | [Cloudflare dashboard → My Profile → API Tokens](https://dash.cloudflare.com/profile/api-tokens) → **Create Token** → use the **Edit Cloudflare Workers** template (or a custom token with `Account: Workers Scripts: Edit` + `User: User Details: Read`). |
+| `CLOUDFLARE_ACCOUNT_ID` | `deploy-cloudflare` | [Cloudflare dashboard](https://dash.cloudflare.com) → select your account → **Workers & Pages** → the Account ID is shown in the right sidebar (or in the URL: `dash.cloudflare.com/<account-id>`).                                                        |
+
+You can also add them via the GitHub CLI:
+
+```bash
+gh secret set DATABASE_URL
+gh secret set CLOUDFLARE_API_TOKEN
+gh secret set CLOUDFLARE_ACCOUNT_ID
+```
+
 ## 📖 Learn More
 
 - [Next.js Documentation](https://nextjs.org/docs)
