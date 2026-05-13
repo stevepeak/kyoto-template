@@ -51,7 +51,6 @@
   "devDependencies": {
     "@ocavue/eslint-config": "^3.6.0",
     "@ocavue/tsconfig": "^0.5.0",
-    "@usekyoto/cli": "^0.0.13",
     "eslint": "^9.37.0",
     "knip": "^5.68.0",
     "husky": "^9.1.7",
