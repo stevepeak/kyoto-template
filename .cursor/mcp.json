@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "kyoto": {
-      "command": "kyoto",
-      "args": ["mcp", "--cwd", "${workspaceFolder}"]
-    }
-  }
-}
