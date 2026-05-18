@@ -1,10 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { Fingerprint } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { authClient } from '@/lib/auth-client'
 
 type AuthMode = 'signin' | 'signup'
+
+type Passkey = {
+  id: string
+  name?: string | null
+  createdAt: string | Date
+}
 
 export function AuthCard() {
   const [mode, setMode] = useState<AuthMode>('signin')
@@ -14,8 +21,28 @@ export function AuthCard() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [passkeys, setPasskeys] = useState<Passkey[] | null>(null)
+  const [passkeyName, setPasskeyName] = useState('')
 
   const { data: session, isPending } = authClient.useSession()
+
+  const refreshPasskeys = useCallback(async () => {
+    const { data, error: listError } =
+      await authClient.passkey.listUserPasskeys()
+    if (listError) {
+      setError(listError.message || 'Failed to load passkeys')
+      return
+    }
+    setPasskeys((data as Passkey[]) ?? [])
+  }, [])
+
+  useEffect(() => {
+    if (session) {
+      void refreshPasskeys()
+    } else {
+      setPasskeys(null)
+    }
+  }, [session, refreshPasskeys])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -50,6 +77,46 @@ export function AuthCard() {
     setIsLoading(false)
   }
 
+  const handlePasskeySignIn = async () => {
+    setError(null)
+    setSuccess(null)
+    setIsLoading(true)
+    const { error } = await authClient.signIn.passkey()
+    if (error) {
+      setError(error.message || 'Failed to sign in with passkey')
+    }
+    setIsLoading(false)
+  }
+
+  const handleAddPasskey = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setSuccess(null)
+    setIsLoading(true)
+    const { error } = await authClient.passkey.addPasskey({
+      name: passkeyName.trim() || undefined,
+    })
+    if (error) {
+      setError(error.message || 'Failed to add passkey')
+    } else {
+      setSuccess('Passkey added')
+      setPasskeyName('')
+      await refreshPasskeys()
+    }
+    setIsLoading(false)
+  }
+
+  const handleDeletePasskey = async (id: string) => {
+    setError(null)
+    setSuccess(null)
+    const { error } = await authClient.passkey.deletePasskey({ id })
+    if (error) {
+      setError(error.message || 'Failed to remove passkey')
+      return
+    }
+    await refreshPasskeys()
+  }
+
   const handleSignOut = async () => {
     await authClient.signOut()
   }
@@ -69,6 +136,67 @@ export function AuthCard() {
           Welcome, {session.user.name}!
         </h2>
         <p className="mb-4 text-sm text-gray-600">{session.user.email}</p>
+
+        <div className="mb-4 border-t border-gray-200 pt-4">
+          <h3 className="mb-2 text-sm font-semibold text-gray-900">Passkeys</h3>
+
+          {passkeys === null ? (
+            <p className="text-sm text-gray-500">Loading passkeys...</p>
+          ) : passkeys.length === 0 ? (
+            <p className="mb-2 text-sm text-gray-500">No passkeys yet.</p>
+          ) : (
+            <ul className="mb-2 flex flex-col gap-2">
+              {passkeys.map((pk) => (
+                <li
+                  key={pk.id}
+                  className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2 text-sm"
+                >
+                  <span className="text-gray-800">
+                    {pk.name || 'Unnamed passkey'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleDeletePasskey(pk.id)}
+                    className="text-xs font-medium text-red-600 hover:text-red-700"
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <form onSubmit={handleAddPasskey} className="flex flex-col gap-2">
+            <input
+              type="text"
+              value={passkeyName}
+              onChange={(e) => setPasskeyName(e.target.value)}
+              placeholder="Passkey name (optional)"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+            />
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="flex w-full items-center justify-center gap-2 rounded-md border border-blue-600 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 disabled:opacity-50"
+            >
+              <Fingerprint className="h-4 w-4" aria-hidden="true" />
+              Add a passkey
+            </button>
+          </form>
+        </div>
+
+        {error && (
+          <p className="mb-3 rounded-md bg-red-50 p-2 text-sm text-red-600">
+            {error}
+          </p>
+        )}
+
+        {success && (
+          <p className="mb-3 rounded-md bg-green-50 p-2 text-sm text-green-600">
+            {success}
+          </p>
+        )}
+
         <button
           type="button"
           onClick={handleSignOut}
@@ -85,6 +213,25 @@ export function AuthCard() {
       <h2 className="mb-4 text-xl font-semibold text-gray-900">
         {mode === 'signin' ? 'Sign In' : 'Sign Up'}
       </h2>
+
+      {mode === 'signin' && (
+        <>
+          <button
+            type="button"
+            onClick={handlePasskeySignIn}
+            disabled={isLoading}
+            className="mb-3 flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-50"
+          >
+            <Fingerprint className="h-4 w-4" aria-hidden="true" />
+            Sign in with passkey
+          </button>
+          <div className="mb-3 flex items-center gap-2 text-xs text-gray-400">
+            <div className="h-px flex-1 bg-gray-200" />
+            <span>or</span>
+            <div className="h-px flex-1 bg-gray-200" />
+          </div>
+        </>
+      )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {mode === 'signup' && (
@@ -120,6 +267,7 @@ export function AuthCard() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            autoComplete={mode === 'signin' ? 'username webauthn' : 'username'}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
             placeholder="you@example.com"
           />
