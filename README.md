@@ -274,11 +274,15 @@ bun --cwd apps/trigger deploy
 
 The CI workflow (`.github/workflows/ci.yml`) runs database migrations and deploys to Cloudflare on every push to `main`. Add the following secrets at **GitHub → Settings → Secrets and variables → Actions → New repository secret**:
 
-| Secret                  | Used by             | Where to find it                                                                                                                                                                                                                                           |
-| ----------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`          | `deploy-migrations` | Your PostgreSQL provider's dashboard. For [Neon](https://neon.tech), open the project → **Connection Details** → copy the pooled connection string. For [Supabase](https://supabase.com), open **Project Settings → Database → Connection string (URI)**.  |
-| `CLOUDFLARE_API_TOKEN`  | `deploy-cloudflare` | [Cloudflare dashboard → My Profile → API Tokens](https://dash.cloudflare.com/profile/api-tokens) → **Create Token** → use the **Edit Cloudflare Workers** template (or a custom token with `Account: Workers Scripts: Edit` + `User: User Details: Read`). |
-| `CLOUDFLARE_ACCOUNT_ID` | `deploy-cloudflare` | [Cloudflare dashboard](https://dash.cloudflare.com) → select your account → **Workers & Pages** → the Account ID is shown in the right sidebar (or in the URL: `dash.cloudflare.com/<account-id>`).                                                        |
+| Secret                        | Used by             | Where to find it                                                                                                                                                                                                                                           |
+| ----------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                | `deploy-migrations` | Your PostgreSQL provider's dashboard. For [Neon](https://neon.tech), open the project → **Connection Details** → copy the pooled connection string. For [Supabase](https://supabase.com), open **Project Settings → Database → Connection string (URI)**.  |
+| `CLOUDFLARE_API_TOKEN`        | `deploy-cloudflare` | [Cloudflare dashboard → My Profile → API Tokens](https://dash.cloudflare.com/profile/api-tokens) → **Create Token** → use the **Edit Cloudflare Workers** template (or a custom token with `Account: Workers Scripts: Edit` + `User: User Details: Read`). |
+| `CLOUDFLARE_ACCOUNT_ID`       | `deploy-cloudflare` | [Cloudflare dashboard](https://dash.cloudflare.com) → select your account → **Workers & Pages** → the Account ID is shown in the right sidebar (or in the URL: `dash.cloudflare.com/<account-id>`).                                                        |
+| `NEXT_PUBLIC_APP_URL`         | `deploy-cloudflare` | Public URL of the deployed app (e.g. `https://kyoto-web.example.workers.dev`). Inlined into the client bundle at build time.                                                                                                                               |
+| `NEXT_PUBLIC_POSTHOG_API_KEY` | `deploy-cloudflare` | [PostHog](https://posthog.com) → **Project Settings → Project API Key**. Inlined into the client bundle at build time so the browser SDK can initialize.                                                                                                   |
+| `NEXT_PUBLIC_POSTHOG_HOST`    | `deploy-cloudflare` | `https://us.i.posthog.com` (US cloud) or `https://eu.i.posthog.com` (EU). Inlined at build time.                                                                                                                                                           |
+| `NEXT_PUBLIC_SENTRY_DSN`      | `deploy-cloudflare` | [Sentry](https://sentry.io) → **Project Settings → Client Keys (DSN)**. Inlined at build time.                                                                                                                                                             |
 
 You can also add them via the GitHub CLI:
 
@@ -286,7 +290,26 @@ You can also add them via the GitHub CLI:
 gh secret set DATABASE_URL
 gh secret set CLOUDFLARE_API_TOKEN
 gh secret set CLOUDFLARE_ACCOUNT_ID
+gh secret set NEXT_PUBLIC_APP_URL
+gh secret set NEXT_PUBLIC_POSTHOG_API_KEY
+gh secret set NEXT_PUBLIC_POSTHOG_HOST
+gh secret set NEXT_PUBLIC_SENTRY_DSN
 ```
+
+### Cloudflare Worker runtime secrets
+
+Server-side secrets (the ones without a `NEXT_PUBLIC_` prefix — `POSTHOG_API_KEY`, `SENTRY_DSN`, `OPENAI_API_KEY`, `BETTER_AUTH_SECRET`, etc.) are read by the Worker at runtime, not inlined at build. Set them once with Wrangler from `apps/web`:
+
+```bash
+bunx wrangler secret put POSTHOG_API_KEY
+bunx wrangler secret put POSTHOG_HOST
+bunx wrangler secret put SENTRY_DSN
+bunx wrangler secret put BETTER_AUTH_SECRET
+bunx wrangler secret put DATABASE_URL
+# ...repeat for any other required secret in packages/config/src/index.ts
+```
+
+The CI deploy uses `wrangler deploy --keep-vars` so these secrets persist across deployments.
 
 ## 📖 Learn More
 
