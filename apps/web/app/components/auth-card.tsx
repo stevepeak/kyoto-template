@@ -13,6 +13,48 @@ type Passkey = {
   createdAt: string | Date
 }
 
+function inferDeviceName(): string {
+  if (typeof navigator === 'undefined') return ''
+
+  const uaData = (
+    navigator as Navigator & {
+      userAgentData?: {
+        brands: { brand: string; version: string }[]
+        platform: string
+      }
+    }
+  ).userAgentData
+  const ua = navigator.userAgent
+
+  let browser = ''
+  if (uaData?.brands) {
+    const known = uaData.brands.find(
+      (b) => !/Not.?A.?Brand/i.test(b.brand) && !/Chromium/i.test(b.brand),
+    )
+    browser = known?.brand ?? ''
+  }
+  if (!browser) {
+    if (/Edg\//.test(ua)) browser = 'Edge'
+    else if (/OPR\//.test(ua)) browser = 'Opera'
+    else if (/Firefox\//.test(ua)) browser = 'Firefox'
+    else if (/Chrome\//.test(ua)) browser = 'Chrome'
+    else if (/Safari\//.test(ua)) browser = 'Safari'
+  }
+
+  let platform = uaData?.platform ?? ''
+  if (!platform) {
+    if (/iPhone/.test(ua)) platform = 'iPhone'
+    else if (/iPad/.test(ua)) platform = 'iPad'
+    else if (/Android/.test(ua)) platform = 'Android'
+    else if (/Mac/.test(ua)) platform = 'macOS'
+    else if (/Win/.test(ua)) platform = 'Windows'
+    else if (/Linux/.test(ua)) platform = 'Linux'
+  }
+
+  if (browser && platform) return `${browser} on ${platform}`
+  return browser || platform || 'Passkey'
+}
+
 export function AuthCard() {
   const [mode, setMode] = useState<AuthMode>('signin')
   const [email, setEmail] = useState('')
@@ -43,6 +85,10 @@ export function AuthCard() {
       setPasskeys(null)
     }
   }, [session, refreshPasskeys])
+
+  useEffect(() => {
+    setPasskeyName((current) => current || inferDeviceName())
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -100,7 +146,7 @@ export function AuthCard() {
       setError(error.message || 'Failed to add passkey')
     } else {
       setSuccess('Passkey added')
-      setPasskeyName('')
+      setPasskeyName(inferDeviceName())
       await refreshPasskeys()
     }
     setIsLoading(false)
