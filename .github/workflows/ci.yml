@@ -55,9 +55,26 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: bun --cwd packages/db db:migrate
 
-  deploy-cloudflare:
-    name: Deploy to Cloudflare
+  deploy-workers:
+    name: Deploy workers
     needs: [deploy-migrations]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - name: Deploy workflows worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/workflows
+          command: deploy --keep-vars
+
+  deploy-web:
+    name: Deploy web
+    needs: [deploy-workers]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
@@ -70,6 +87,7 @@ jobs:
           NEXT_PUBLIC_POSTHOG_API_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_API_KEY }}
           NEXT_PUBLIC_POSTHOG_HOST: ${{ secrets.NEXT_PUBLIC_POSTHOG_HOST }}
           NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
+          NEXT_PUBLIC_WORKFLOWS_URL: ${{ secrets.NEXT_PUBLIC_WORKFLOWS_URL }}
         run: bun --cwd apps/web run build:cloudflare
 
       - name: Deploy to Cloudflare Workers

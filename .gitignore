@@ -22,13 +22,12 @@ playwright-report
 .env*.local
 .eslintcache
 .eslintcacheapps
-apps/trigger/.trigger
 tmp/
 .next
 next-env.d.ts
 *storybook.log
 storybook-static
-.kyoto
 .postgres-data
 .postgres
 .wrangler
+.dev.vars

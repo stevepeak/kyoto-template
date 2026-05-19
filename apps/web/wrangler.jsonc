@@ -11,4 +11,9 @@
   "observability": {
     "enabled": true,
   },
+
+  // Service binding to the workflows worker. Wrangler routes RPC calls
+  // between the two workers in `wrangler dev`; in prod, both workers must
+  // be deployed in the same Cloudflare account.
+  "services": [{ "binding": "WORKFLOWS", "service": "kyoto-workflows" }],
 }

@@ -2,33 +2,28 @@
 
 import { useState } from 'react'
 
-import { useTriggerRun } from '@/app/hooks/use-trigger-run'
+import { useWorkflowRun } from '@/app/hooks/use-workflow-run'
 import { trpc } from '@/lib/trpc'
 
 export function TriggerCard() {
   const [runId, setRunId] = useState<string | null>(null)
-  const [publicAccessToken, setPublicAccessToken] = useState<string | null>(
-    null,
-  )
+  const [accessToken, setAccessToken] = useState<string | null>(null)
   const [streamOutput, setStreamOutput] = useState<string[]>([])
 
-  const triggerMutation = trpc.trigger.exampleAgent.useMutation({
+  const triggerMutation = trpc.workflows.exampleAgent.useMutation({
     onSuccess: (data) => {
       setRunId(data.runId)
-      setPublicAccessToken(data.publicAccessToken)
+      setAccessToken(data.accessToken)
       setStreamOutput([])
     },
   })
 
-  const { isLoading, isCompleted, isFailed, output, error } = useTriggerRun({
-    triggerDevRunId: runId,
-    triggerDevPublicAccessToken: publicAccessToken,
+  const { isLoading, isCompleted, isFailed, output, error } = useWorkflowRun({
+    runId,
+    accessToken,
     showToast: false,
     onStreamText: (text) => {
       setStreamOutput((prev) => [...prev, text])
-    },
-    onComplete: () => {
-      // Reset for next run
     },
   })
 

@@ -23,9 +23,27 @@ const envSchema = z.object({
       'DATABASE_URL must start with postgres:// or postgresql://',
     ),
 
-  // Trigger.dev
-  TRIGGER_PROJECT_ID: z.string().optional(),
-  TRIGGER_SECRET_KEY: z.string().min(1).startsWith('tr_'),
+  // Cloudflare Workflows worker (replaces Trigger.dev)
+  WORKFLOWS_URL: z
+    .string()
+    .url()
+    .default('http://localhost:8787')
+    .describe(
+      'Base URL of the kyoto-workflows worker — used by the server in dev',
+    ),
+  NEXT_PUBLIC_WORKFLOWS_URL: z
+    .string()
+    .url()
+    .default('http://localhost:8787')
+    .describe(
+      'Browser-visible URL of the workflows worker for SSE/WebSocket subscriptions',
+    ),
+  TOKEN_SIGNING_KEY: z
+    .string()
+    .min(32)
+    .describe(
+      'HMAC key used to sign per-run access tokens. Generate with: openssl rand -base64 32',
+    ),
 
   // AI
   OPENAI_API_KEY: z.string().startsWith('sk-'),

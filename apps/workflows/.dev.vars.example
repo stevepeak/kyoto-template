@@ -1,0 +1,14 @@
+# Local Wrangler secrets. Two options:
+#
+#   1. (Recommended) Symlink the root .env so you have one source of truth:
+#      `ln -s ../../.env .dev.vars`
+#      `bun --cwd apps/workflows dev` does this automatically on first run.
+#
+#   2. Copy this file to .dev.vars and fill in real values.
+#
+# Either way the file is gitignored.
+
+# Generate TOKEN_SIGNING_KEY once with: openssl rand -base64 32
+TOKEN_SIGNING_KEY="change-me-to-a-32-byte-random-string"
+OPENROUTER_API_KEY="sk-or-v1-xxxxx"
+SENTRY_DSN=""

@@ -18,7 +18,7 @@ export default defineESLintConfig(
       '**/*.min.js',
       '**/coverage/**',
       '**/.turbo/**',
-      '**/.trigger/**',
+      '**/.wrangler/**',
       '**/.next/**',
       '**/*.config.js',
       '**/postcss.config.js',

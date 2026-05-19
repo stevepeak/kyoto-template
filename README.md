@@ -1,14 +1,6 @@
-# Kyoto Template
+# Template Repo
 
-A modern, type-safe monorepo template for building full-stack applications with Next.js, tRPC, Drizzle ORM, and Trigger.dev.
-
-```sh
-入   |
-京   |
-行   |   Kyoto - Vibe git template
-改   |
-善   |
-```
+A modern, type-safe monorepo template for building full-stack applications with Next.js, tRPC, Drizzle ORM, and a Cloudflare-native background-job stack (Workflows + Queues + Durable Objects).
 
 ## 🚀 Quick Start
 
@@ -16,7 +8,7 @@ A modern, type-safe monorepo template for building full-stack applications with 
 
 - **Bun** (v1.1.42+) - [Install Bun](https://bun.sh)
 - **PostgreSQL Database** - Use [Neon](https://neon.tech), [Supabase](https://supabase.com), or any PostgreSQL provider
-- **Trigger.dev Account** - [Sign up](https://trigger.dev) for background job processing
+- **Cloudflare Account** - [Sign up](https://dash.cloudflare.com/sign-up) — Workers Paid plan is required for Workflows + Durable Objects
 - **Sentry Account** - [Sign up](https://sentry.io) for error tracking
 - **PostHog Account** - [Sign up](https://posthog.com) for analytics (optional)
 
@@ -55,17 +47,13 @@ A modern, type-safe monorepo template for building full-stack applications with 
    # Better Auth
    BETTER_AUTH_SECRET="your-secret-here"  # Generate with: openssl rand -base64 32
 
-   # Trigger.dev
-   TRIGGER_PROJECT_ID="proj_xxxxx"  # Get from Trigger.dev dashboard
-   TRIGGER_SECRET_KEY="tr_dev_xxxxx"  # Get from Trigger.dev dashboard
+   # Cloudflare Workflows worker (replaces Trigger.dev)
+   TOKEN_SIGNING_KEY="..."          # Generate with: openssl rand -base64 32
+   WORKFLOWS_URL="http://localhost:8787"
+   NEXT_PUBLIC_WORKFLOWS_URL="http://localhost:8787"
 
-   # AI Services (choose one)
-   OPENAI_API_KEY="sk-xxxxx"  # OpenAI
-   # OR
-   OPENROUTER_API_KEY="sk-or-v1-xxxxx"  # OpenRouter
-   OPENROUTER_PROVISION_KEY="sk-or-v1-xxxxx"  # OpenRouter
-   # OR
-   AI_GATEWAY_API_KEY="vck_xxxxx"  # AI Gateway
+   # AI — routed through OpenRouter
+   OPENROUTER_API_KEY="sk-or-v1-xxxxx"
 
    # Sentry (Error Tracking)
    SENTRY_DSN="https://xxxxx@sentry.io/xxxxx"
@@ -91,7 +79,7 @@ A modern, type-safe monorepo template for building full-stack applications with 
 6. **Start development servers:**
 
    ```bash
-   # Start all apps (web + trigger)
+   # Start all apps (web + workflows worker)
    bun run dev
 
    # Or start just the web app
@@ -99,7 +87,9 @@ A modern, type-safe monorepo template for building full-stack applications with 
    ```
 
    - Web app: http://localhost:3000
-   - Trigger.dev dev server will start automatically
+   - Workflows worker: http://localhost:8787 (Wrangler dev with local
+     Workflows / Queues / Durable Object simulation, persisted to
+     `.wrangler/state`)
 
 ## 📦 Project Structure
 
@@ -109,9 +99,11 @@ kyoto-template/
 │   ├── web/              # Next.js 16 web application
 │   │   ├── app/          # App Router pages and routes
 │   │   └── ...
-│   └── trigger/          # Trigger.dev background jobs
-│       ├── src/tasks/    # Background task definitions
-│       └── ...
+│   └── workflows/        # Cloudflare Workflows / Queues / DOs worker
+│       └── src/
+│           ├── workflows/        # WorkflowEntrypoint classes
+│           ├── durable-objects/  # Per-run progress / WebSocket fan-out
+│           └── queues/           # Queue consumers
 │
 ├── packages/
 │   ├── api/              # tRPC API definitions
@@ -157,10 +149,18 @@ kyoto-template/
 - `bun --cwd packages/db db:push` - Push schema directly (dev only)
 - `bun --cwd packages/db db:studio` - Open Drizzle Studio
 
-### Trigger.dev (`apps/trigger`)
+### Workflows worker (`apps/workflows`)
 
-- `bun --cwd apps/trigger dev` - Start Trigger.dev dev server
-- `bun --cwd apps/trigger deploy` - Deploy tasks to Trigger.dev
+- `bun --cwd apps/workflows dev` - Start Wrangler dev with Workflows / Queues / DOs
+- `bun --cwd apps/workflows dev:scheduled` - Same, plus the `/__scheduled` endpoint for manual cron firing
+- `bun --cwd apps/workflows deploy` - Deploy the worker (Workflows + DOs + Queues + Cron triggers)
+- `bun --cwd apps/workflows tail` - Stream production logs
+
+Trigger a cron run locally:
+
+```bash
+curl 'http://localhost:8787/__scheduled?cron=0+3+*+*+*'
+```
 
 ## 🏗 Tech Stack
 
@@ -181,7 +181,9 @@ kyoto-template/
 
 - **[Drizzle ORM](https://orm.drizzle.team)** - Type-safe SQL ORM
 - **[PostgreSQL](https://www.postgresql.org)** - Database
-- **[Trigger.dev](https://trigger.dev)** - Background job processing
+- **[Cloudflare Workflows](https://developers.cloudflare.com/workflows/)** - Durable, resumable async tasks (replaces Trigger.dev)
+- **[Cloudflare Queues](https://developers.cloudflare.com/queues/)** - Batched fire-and-forget jobs with retries + DLQ
+- **[Cloudflare Durable Objects](https://developers.cloudflare.com/durable-objects/)** - Per-run progress fan-out via WebSocket / SSE
 - **[Zod](https://zod.dev)** - Schema validation
 
 ### Infrastructure
@@ -262,12 +264,20 @@ function greet(name: string) {}
 
 The project is configured for Vercel deployment. Set all environment variables in the Vercel dashboard.
 
-### Trigger.dev
+### Workflows worker
 
-Deploy background jobs:
+Deploy the workflows Worker (Workflows + Durable Objects + Queues + Cron triggers in one shot):
 
 ```bash
-bun --cwd apps/trigger deploy
+bun --cwd apps/workflows deploy
+```
+
+Set runtime secrets once:
+
+```bash
+bunx wrangler --cwd apps/workflows secret put TOKEN_SIGNING_KEY
+bunx wrangler --cwd apps/workflows secret put OPENROUTER_API_KEY
+bunx wrangler --cwd apps/workflows secret put SENTRY_DSN
 ```
 
 ### GitHub Actions Secrets
@@ -298,7 +308,7 @@ gh secret set NEXT_PUBLIC_SENTRY_DSN
 
 ### Cloudflare Worker runtime secrets
 
-Server-side secrets (the ones without a `NEXT_PUBLIC_` prefix — `POSTHOG_API_KEY`, `SENTRY_DSN`, `OPENAI_API_KEY`, `BETTER_AUTH_SECRET`, etc.) are read by the Worker at runtime, not inlined at build. Set them once with Wrangler from `apps/web`:
+Server-side secrets (the ones without a `NEXT_PUBLIC_` prefix — `POSTHOG_API_KEY`, `SENTRY_DSN`, `OPENROUTER_API_KEY`, `BETTER_AUTH_SECRET`, etc.) are read by the Worker at runtime, not inlined at build. Set them once with Wrangler from `apps/web`:
 
 ```bash
 bunx wrangler secret put POSTHOG_API_KEY
@@ -316,7 +326,9 @@ The CI deploy uses `wrangler deploy --keep-vars` so these secrets persist across
 - [Next.js Documentation](https://nextjs.org/docs)
 - [tRPC Documentation](https://trpc.io/docs)
 - [Drizzle ORM Documentation](https://orm.drizzle.team/docs/overview)
-- [Trigger.dev Documentation](https://trigger.dev/docs)
+- [Cloudflare Workflows Documentation](https://developers.cloudflare.com/workflows/)
+- [Cloudflare Queues Documentation](https://developers.cloudflare.com/queues/)
+- [Cloudflare Durable Objects Documentation](https://developers.cloudflare.com/durable-objects/)
 - [Turborepo Documentation](https://turbo.build/repo/docs)
 
 ## 📄 License

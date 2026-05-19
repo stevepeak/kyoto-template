@@ -29,11 +29,19 @@ const config: KnipConfig = {
         '**/.eslintrc.json',
       ],
     },
-    'apps/trigger': {
-      entry: ['trigger.config.ts'],
+    'apps/workflows': {
+      entry: ['src/index.ts'],
+      project: ['src/**/*.ts'],
+      ignore: [
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/.wrangler/**',
+        '**/*.d.ts',
+      ],
+    },
+    'packages/workflows-client': {
       project: ['src/**/*.ts'],
       ignore: ['**/node_modules/**', '**/dist/**', '**/*.d.ts'],
-      ignoreDependencies: ['@babel/preset-typescript', 'import-in-the-middle'],
     },
     'packages/api': {
       project: ['src/**/*.ts'],

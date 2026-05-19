@@ -19,10 +19,17 @@ cmd_button(
 
 
 local_resource(
-    name='Trigger',
+    name='Workflows',
     labels=["Apps"],
-    serve_cmd="bun run --cwd apps/trigger dev",
-    links=[ link("https://cloud.trigger.dev/orgs/tailz-5e0b/projects/tailz-uBK2/env/dev/runs", "Trigger") ],
+    serve_cmd="bun run --cwd apps/workflows dev",
+    links=[ link("http://localhost:8787/", "Workflows Worker") ],
+)
+cmd_button(
+    name="btn-workflows-kill",
+    resource="Workflows",
+    icon_name="terminal",
+    text="Kill Port",
+    argv=["sh", "-c", "lsof -i :8787 -t | xargs kill"],
 )
 
 local_resource(

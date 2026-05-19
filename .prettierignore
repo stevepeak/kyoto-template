@@ -5,8 +5,8 @@ CHANGELOG.md
 __nock-fixtures__
 **/*.gen.*
 migrations/**
-.trigger
-.next 
+.wrangler
+.next
 .cache
 .DS_Store
 .idea

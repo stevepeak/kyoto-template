@@ -4,7 +4,7 @@
   "type": "module",
   "version": "0.0.0",
   "private": true,
-  "description": "Kyoto",
+  "description": "Template",
   "workspaces": {
     "packages": [
       "apps/*",
@@ -12,7 +12,7 @@
       "packages/*"
     ],
     "catalog": {
-      "@ai-sdk/openai": "^1.0.0",
+      "@openrouter/ai-sdk-provider": "^2.9.0",
       "@opentelemetry/api": "^1.9.1",
       "@opentelemetry/sdk-node": "^0.218.0",
       "@sentry/node": "^10.53.1",
@@ -22,7 +22,7 @@
       "@trpc/react-query": "^11.17.0",
       "@trpc/server": "^11.17.0",
       "@types/node": "^25.9.0",
-      "ai": "^5.0.107",
+      "ai": "^6.0.185",
       "drizzle-orm": "^0.45.2",
       "eslint": "^10.4.0",
       "import-in-the-middle": "^3.0.1",

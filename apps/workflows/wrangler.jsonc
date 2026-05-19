@@ -1,0 +1,73 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "kyoto-workflows",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-15",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "observability": {
+    "enabled": true,
+  },
+
+  // Workflows — one binding per WorkflowEntrypoint class.
+  // Add a new entry whenever you add a workflow in src/workflows/.
+  "workflows": [
+    {
+      "name": "hello-world",
+      "binding": "HELLO_WORLD",
+      "class_name": "HelloWorld",
+    },
+    {
+      "name": "example-agent",
+      "binding": "EXAMPLE_AGENT",
+      "class_name": "ExampleAgent",
+    },
+    {
+      "name": "drip-email",
+      "binding": "DRIP_EMAIL",
+      "class_name": "DripEmail",
+    },
+    {
+      "name": "nightly-cleanup",
+      "binding": "NIGHTLY_CLEANUP",
+      "class_name": "NightlyCleanup",
+    },
+  ],
+
+  // Durable Object — holds per-run progress + WebSocket fan-out.
+  "durable_objects": {
+    "bindings": [{ "name": "RUN_ROOM", "class_name": "RunRoom" }],
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["RunRoom"],
+    },
+  ],
+
+  // Queues — fire-and-forget background work with batched retries.
+  "queues": {
+    "producers": [
+      { "queue": "kyoto-notifications", "binding": "NOTIFICATIONS" },
+    ],
+    "consumers": [
+      {
+        "queue": "kyoto-notifications",
+        "max_batch_size": 25,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+        "dead_letter_queue": "kyoto-notifications-dlq",
+      },
+    ],
+  },
+
+  // Cron triggers — fire scheduled events; the handler enqueues to the queue.
+  "triggers": {
+    "crons": ["0 3 * * *"],
+  },
+
+  // Vars (non-secret) — set with `wrangler secret put` for sensitive values.
+  // Browser uses PUBLIC_BASE_URL to subscribe to SSE/WS endpoints directly.
+  "vars": {
+    "PUBLIC_BASE_URL": "http://localhost:8787",
+  },
+}

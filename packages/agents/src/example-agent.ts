@@ -1,4 +1,4 @@
-import { Experimental_Agent as Agent, Output } from 'ai'
+import { Output, ToolLoopAgent } from 'ai'
 import { z } from 'zod'
 
 /**
@@ -52,25 +52,38 @@ import { z } from 'zod'
  */
 
 // Define the output schema using Zod
-export const exampleAgentOutputSchema = z.object({
-  message: z.string().describe('A greeting message'),
-  timestamp: z
-    .string()
-    .describe('ISO timestamp of when the message was generated'),
-  data: z
-    .object({
-      count: z.number().describe('A sample number'),
-      items: z.array(z.string()).describe('A sample array of strings'),
-    })
-    .optional()
-    .describe('Optional structured data'),
-})
+// NOTE: OpenAI strict structured-output mode (which OpenRouter forwards to
+// most OpenAI-family backends) imposes three rules on every JSON schema:
+//   1. Every key in `properties` must also be in `required` — use `.nullable()`
+//      for optional fields, not `.optional()`.
+//   2. Every `object` must set `additionalProperties: false` — Zod emits that
+//      via `.strict()`.
+//   3. A few keywords (`default`, `format` other than enum, etc.) are banned.
+//
+// Call `.strict()` on every nested object in agent schemas, otherwise providers
+// running in strict mode reject the request with a 400.
+export const exampleAgentOutputSchema = z
+  .object({
+    message: z.string().describe('A greeting message'),
+    timestamp: z
+      .string()
+      .describe('ISO timestamp of when the message was generated'),
+    data: z
+      .object({
+        count: z.number().describe('A sample number'),
+        items: z.array(z.string()).describe('A sample array of strings'),
+      })
+      .strict()
+      .nullable()
+      .describe('Optional structured data (null when absent)'),
+  })
+  .strict()
 
 export type ExampleAgentOutput = z.infer<typeof exampleAgentOutputSchema>
 
 // Define the input type
 export type ExampleAgentInput = {
-  model: ConstructorParameters<typeof Agent>[0]['model']
+  model: ConstructorParameters<typeof ToolLoopAgent>[0]['model']
   name?: string
 }
 
@@ -88,32 +101,30 @@ export async function exampleAgent({
   name = 'World',
 }: ExampleAgentInput): Promise<ExampleAgentOutput> {
   // Create the agent with structured output
-  const agent = new Agent({
+  const agent = new ToolLoopAgent({
     model,
-    system: `You are a helpful assistant that generates greeting messages.
+    instructions: `You are a helpful assistant that generates greeting messages.
 Your responses must follow the exact schema provided.`,
     // Add tools here - see instructions above
     tools: {
       // Example: Add a simple tool
-      // getCurrentTime: {
+      // getCurrentTime: tool({
       //   description: 'Get the current time',
-      //   parameters: z.object({}),
-      //   execute: async () => {
-      //     return { time: new Date().toISOString() }
-      //   },
-      // },
+      //   inputSchema: z.object({}),
+      //   execute: async () => ({ time: new Date().toISOString() }),
+      // }),
     },
-    // Use structured output with Zod schema
-    experimental_output: Output.object({
+    // Use structured output with Zod schema (renamed from experimental_output in ai@6).
+    output: Output.object({
       schema: exampleAgentOutputSchema,
     }),
   })
 
-  // Generate the response
-  const result = await agent.generate({
+  // Generate the response. In ai@6, .generate() returns { output, ... } and
+  // `output` is already typed + validated against the schema.
+  const { output } = await agent.generate({
     prompt: `Generate a greeting message for ${name}. Include a timestamp and some sample data.`,
   })
 
-  // Return the structured output (automatically validated by Zod)
-  return result.experimental_output
+  return output
 }

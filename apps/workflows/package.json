@@ -1,0 +1,44 @@
+{
+  "name": "@app/workflows",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cloudflare Workflows / Queues / Durable Objects worker — replaces Trigger.dev",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "clean": "rm -rf node_modules dist .wrangler",
+    "predev": "test -e .dev.vars || ln -sf ../../.env .dev.vars",
+    "dev": "wrangler dev --port 8787 --persist-to ../../.wrangler/state",
+    "predev:scheduled": "test -e .dev.vars || ln -sf ../../.env .dev.vars",
+    "dev:scheduled": "wrangler dev --port 8787 --persist-to ../../.wrangler/state --test-scheduled",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv worker-env.d.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . && prettier --ignore-path='../../.prettierignore' --check .",
+    "fix": "eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
+  },
+  "dependencies": {
+    "@openrouter/ai-sdk-provider": "catalog:",
+    "@app/agents": "workspace:*",
+    "@app/workflows-client": "workspace:*",
+    "@ocavue/eslint-config": "^4.5.7",
+    "@sentry/cloudflare": "^10.53.1",
+    "ai": "catalog:",
+    "eslint": "^10.4.0",
+    "knip": "^6.14.1",
+    "lint-staged": "^17.0.5",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250115.0",
+    "@kyoto/eslint-config": "workspace:*",
+    "@types/node": "catalog:",
+    "tsconfig": "workspace:*",
+    "typescript": "^6.0.3",
+    "wrangler": "^4.92.0"
+  }
+}

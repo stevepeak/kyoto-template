@@ -1,0 +1,15 @@
+{
+  "extends": "tsconfig/bun.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "noEmit": true,
+    "skipLibCheck": true,
+    "incremental": true,
+    "types": ["@cloudflare/workers-types"],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*", "worker-env.d.ts"],
+  "exclude": ["node_modules", "dist", ".wrangler", ".turbo"]
+}

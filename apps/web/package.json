@@ -21,9 +21,9 @@
   "dependencies": {
     "@app/api": "workspace:*",
     "@app/db": "workspace:*",
+    "@app/workflows-client": "workspace:*",
     "@better-auth/passkey": "^1.6.11",
     "@tanstack/react-query": "catalog:",
-    "@trigger.dev/react-hooks": "^4.3.2",
     "@trpc/client": "catalog:",
     "@trpc/react-query": "catalog:",
     "@trpc/server": "catalog:",
