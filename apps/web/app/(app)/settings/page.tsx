@@ -13,6 +13,7 @@ export default async function ProfileSettingsPage() {
   return (
     <ProfileSection
       initialName={session.user.name ?? ''}
+      initialImage={session.user.image ?? null}
       email={session.user.email}
     />
   )

@@ -1,23 +1,82 @@
 'use client'
 
 import { UserCircle } from 'lucide-react'
-import { type FormEvent, useState } from 'react'
+import { type ChangeEvent, type FormEvent, useRef, useState } from 'react'
 
 import { authClient } from '@/lib/auth-client'
 
 import { FieldMessage, SectionCard } from './section-card'
-import { inputClass, labelClass, primaryButtonClass } from './styles'
+import {
+  inputClass,
+  labelClass,
+  primaryButtonClass,
+  secondaryButtonClass,
+} from './styles'
 
 interface ProfileSectionProps {
   initialName: string
+  initialImage: string | null
   email: string
 }
 
-export function ProfileSection({ initialName, email }: ProfileSectionProps) {
+export function ProfileSection({
+  initialName,
+  initialImage,
+  email,
+}: ProfileSectionProps) {
   const [name, setName] = useState(initialName)
   const [saved, setSaved] = useState(initialName)
   const [isSaving, setIsSaving] = useState(false)
+  const [image, setImage] = useState(initialImage)
+  const [isUploading, setIsUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [msg, setMsg] = useState<{ error?: string; success?: string }>({})
+
+  const handleFile = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setIsUploading(true)
+    setMsg({})
+    try {
+      const body = new FormData()
+      body.append('file', file)
+      const res = await fetch('/api/avatar', { method: 'POST', body })
+      const json = (await res.json().catch(() => ({}))) as {
+        url?: string
+        error?: string
+      }
+      if (!res.ok || !json.url) {
+        setMsg({ error: json.error || 'Failed to upload your photo' })
+        return
+      }
+      const { error } = await authClient.updateUser({ image: json.url })
+      if (error) {
+        setMsg({ error: error.message || 'Failed to save your photo' })
+        return
+      }
+      setImage(json.url)
+      setMsg({ success: 'Photo updated' })
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const handleRemove = async () => {
+    setIsUploading(true)
+    setMsg({})
+    const { error } = await authClient.updateUser({ image: null })
+    if (error) {
+      setIsUploading(false)
+      setMsg({ error: error.message || 'Failed to remove your photo' })
+      return
+    }
+    // Best effort: a leftover object is pruned on the next upload anyway.
+    await fetch('/api/avatar', { method: 'DELETE' }).catch(() => {})
+    setIsUploading(false)
+    setImage(null)
+    setMsg({ success: 'Photo removed' })
+  }
 
   const trimmed = name.trim()
   const canSave = trimmed.length > 0 && trimmed !== saved && !isSaving
@@ -44,6 +103,55 @@ export function ProfileSection({ initialName, email }: ProfileSectionProps) {
       icon={UserCircle}
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <div className="flex items-center gap-4">
+          {image ? (
+            <img
+              src={image}
+              alt=""
+              className="h-16 w-16 shrink-0 rounded-full border border-gray-200 object-cover"
+            />
+          ) : (
+            <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-400">
+              <UserCircle className="h-8 w-8" aria-hidden="true" />
+            </span>
+          )}
+          <div className="flex flex-col gap-1">
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className={secondaryButtonClass}
+              >
+                {isUploading
+                  ? 'Saving…'
+                  : image
+                    ? 'Change photo'
+                    : 'Upload photo'}
+              </button>
+              {image ? (
+                <button
+                  type="button"
+                  onClick={handleRemove}
+                  disabled={isUploading}
+                  className={secondaryButtonClass}
+                >
+                  Remove
+                </button>
+              ) : null}
+            </div>
+            <p className="text-xs text-gray-500">
+              PNG, JPEG, WebP or GIF, up to 2 MB.
+            </p>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            onChange={handleFile}
+            className="hidden"
+          />
+        </div>
         <div>
           <label htmlFor="profile-name" className={labelClass}>
             Name

@@ -40,7 +40,18 @@ type StringBinding = {
  * string reads as absent.
  */
 export function cfVar(name: StringBinding): string | undefined {
-  // eslint-disable-next-line no-process-env
   const value = cfEnv()[name] ?? process.env[name]
   return value && value.length > 0 ? value : undefined
+}
+
+/**
+ * Keep `promise` running after the response is sent. Outside the Cloudflare
+ * runtime (tests) there is nothing to extend, so it just runs unawaited.
+ */
+export function cfWaitUntil(promise: Promise<unknown>): void {
+  try {
+    getCloudflareContext().ctx.waitUntil(promise)
+  } catch {
+    // getCloudflareContext throws outside the Cloudflare runtime.
+  }
 }

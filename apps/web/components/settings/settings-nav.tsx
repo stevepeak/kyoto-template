@@ -4,6 +4,8 @@ import { Bell, type LucideIcon, Plug, Shield, UserCircle } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
+import { authClient } from '@/lib/auth-client'
+
 type SettingsTab = { href: string; label: string; icon: LucideIcon }
 
 type SettingsGroup = { label: string; tabs: SettingsTab[] }
@@ -34,8 +36,15 @@ function activeHref(pathname: string): string | null {
   return best
 }
 
-export function SettingsNav() {
+interface SettingsNavProps {
+  /** The server-read avatar, used until the client session resolves. */
+  initialImage: string | null
+}
+
+export function SettingsNav({ initialImage }: SettingsNavProps) {
   const active = activeHref(usePathname())
+  const { data: session, isPending } = authClient.useSession()
+  const image = isPending ? initialImage : (session?.user.image ?? null)
 
   return (
     <nav
@@ -61,7 +70,15 @@ export function SettingsNav() {
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                   >
-                    <Icon className="h-4 w-4" aria-hidden="true" />
+                    {href === '/settings' && image ? (
+                      <img
+                        src={image}
+                        alt=""
+                        className="h-4 w-4 rounded-full object-cover"
+                      />
+                    ) : (
+                      <Icon className="h-4 w-4" aria-hidden="true" />
+                    )}
                     {label}
                   </Link>
                 </li>

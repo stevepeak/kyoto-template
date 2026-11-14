@@ -19,17 +19,22 @@ declare global {
     // Cloudflare Email Sending.
     EMAIL: SendEmail
 
+    // R2: user-uploaded profile pictures.
+    AVATARS: R2Bucket
+
     // Vars
     APP_URL?: string
     GOOGLE_CLIENT_ID?: string
     EMAIL_FROM?: string
     EMAIL_FROM_NAME?: string
+    POSTHOG_HOST?: string
 
     // Secrets (`wrangler secret put …`)
     BETTER_AUTH_SECRET?: string
     GOOGLE_CLIENT_SECRET?: string
     OPENROUTER_API_KEY?: string
     WF_CONNECTOR_KEY?: string
+    POSTHOG_API_KEY?: string
 
     // TODO: see lib/wf-access.ts — who may use the 007 console.
     WF_ADMIN_EMAILS?: string

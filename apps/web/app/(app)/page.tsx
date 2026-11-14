@@ -1,11 +1,16 @@
-'use client'
-
+import { headers } from 'next/headers'
 import Link from 'next/link'
 
-import { authClient } from '@/lib/auth-client'
+import { SetupChecklist } from '@/components/home/setup-checklist'
+import { getAuth } from '@/lib/auth'
+import { getSetupChecklist } from '@/lib/setup-checklist'
+import { canUseWorkflows } from '@/lib/wf-access'
 
-export default function HomePage() {
-  const { data: session, isPending } = authClient.useSession()
+export default async function HomePage() {
+  const session = await getAuth().api.getSession({ headers: await headers() })
+  // The setup list names unset secrets, so only admins (the 007 allowlist —
+  // any signed-in user under `next dev`) see it.
+  const showSetup = session ? canUseWorkflows(session.user.email) : false
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-8 p-8">
@@ -22,7 +27,7 @@ export default function HomePage() {
         <rect x="6" y="42" width="22" height="16" rx="3" />
         <rect x="36" y="28" width="22" height="30" rx="3" />
       </svg>
-      {!isPending && !session && (
+      {session ? null : (
         <Link
           href="/login"
           className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
@@ -30,6 +35,7 @@ export default function HomePage() {
           Sign in
         </Link>
       )}
+      {showSetup ? <SetupChecklist items={getSetupChecklist()} /> : null}
     </main>
   )
 }
