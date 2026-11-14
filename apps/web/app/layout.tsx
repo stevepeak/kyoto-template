@@ -1,7 +1,10 @@
+import './globals.css'
+
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 
-import './globals.css'
+import { SiteFooter } from '@/components/site-footer'
+
 import { PostHogProvider } from './providers/posthog-provider'
 import { TRPCProvider } from './providers/trpc-provider'
 
@@ -26,7 +29,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en">
       <body>
         <TRPCProvider>
-          <PostHogProvider>{children}</PostHogProvider>
+          <PostHogProvider>
+            {children}
+            <SiteFooter />
+          </PostHogProvider>
         </TRPCProvider>
       </body>
     </html>
