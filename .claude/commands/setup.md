@@ -51,8 +51,10 @@ set -a && source .env && set +a && bunx wrangler <command>
   its `.example`).
 - Cloudflare access works: MCP `execute` → list accounts, or
   `wrangler whoami`. Record the account id in `.env` `CLOUDFLARE_ACCOUNT_ID`.
-- The account is on **Workers Paid** — Workflows and Durable Objects need it.
-  If not, stop and tell the user.
+- Check for **Workers Paid** (`/accounts/{id}/subscriptions`). Free deploys
+  (Workflows and SQLite Durable Objects work there), but its 10 ms CPU limit
+  per request/step breaks password hashing and most SSR — fine for a smoke
+  test, not for real use. Tell the user which plan they're on.
 
 ### 2. Naming
 

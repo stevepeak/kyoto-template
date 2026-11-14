@@ -12,7 +12,7 @@
       // `bunx wrangler d1 create <name>` (pick a location/jurisdiction), and
       // paste the returned id below and into apps/web + apps/workflows.
       "database_name": "template-db",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "b1f084e0-37fd-4631-9552-48f6877504dc",
       "migrations_dir": "./migrations",
     },
   ],

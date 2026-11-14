@@ -12,3 +12,6 @@
 TOKEN_SIGNING_KEY="change-me-to-a-32-byte-random-string"
 OPENROUTER_API_KEY="sk-or-v1-xxxxx"
 SENTRY_DSN=""
+
+# Overrides the deployed URL in wrangler.jsonc vars for `wrangler dev`.
+PUBLIC_BASE_URL="http://localhost:8787"

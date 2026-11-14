@@ -56,10 +56,14 @@ const nextConfig = {
 
 // Bindings (D1, service bindings, email) in `next dev`. Persist to the same
 // root `.wrangler/state` the workflows worker and `db:migrate:local` use, so
-// all three see one local D1.
-initOpenNextCloudflareForDev({
-  persist: { path: '../../.wrangler/state/v3' },
-})
+// all three see one local D1. Dev only: the `remote: true` bindings (AI,
+// Vectorize, Browser) open a Cloudflare session, which `next build` in CI
+// has no token for.
+if (process.env.NODE_ENV === 'development') {
+  initOpenNextCloudflareForDev({
+    persist: { path: '../../.wrangler/state/v3' },
+  })
+}
 
 // Source maps upload only when SENTRY_AUTH_TOKEN (+ SENTRY_ORG,
 // SENTRY_PROJECT) are set — CI for deploys; local builds skip it.

@@ -29,12 +29,12 @@
     {
       "binding": "DB",
       "database_name": "template-db",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "b1f084e0-37fd-4631-9552-48f6877504dc",
     },
     {
       "binding": "WF_DB",
       "database_name": "template-wf",
-      "database_id": "00000000-0000-0000-0000-000000000001",
+      "database_id": "9d83a8dc-ef85-48ea-843e-9770ebb66910",
     },
   ],
 
@@ -74,7 +74,7 @@
   // `WF_CONNECTOR_KEY`, `POSTHOG_API_KEY`, `SENTRY_DSN`.
   // TODO: fill in production values.
   "vars": {
-    "APP_URL": "",
+    "APP_URL": "https://template-web.template-78f.workers.dev",
     "GOOGLE_CLIENT_ID": "",
     "TURNSTILE_SITE_KEY": "",
     "EMAIL_FROM": "",

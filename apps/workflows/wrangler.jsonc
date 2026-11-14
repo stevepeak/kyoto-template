@@ -76,12 +76,12 @@
     {
       "binding": "DB",
       "database_name": "template-db",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "b1f084e0-37fd-4631-9552-48f6877504dc",
     },
     {
       "binding": "WF_DB",
       "database_name": "template-wf",
-      "database_id": "00000000-0000-0000-0000-000000000001",
+      "database_id": "9d83a8dc-ef85-48ea-843e-9770ebb66910",
       "migrations_dir": "../../packages/007/migrations",
     },
   ],
@@ -139,7 +139,7 @@
   // OPENROUTER_API_KEY, WF_CONNECTOR_KEY (same value as apps/web).
   // Browser uses PUBLIC_BASE_URL to subscribe to SSE/WS endpoints directly.
   "vars": {
-    "PUBLIC_BASE_URL": "http://localhost:8787",
+    "PUBLIC_BASE_URL": "https://template-workflows.template-78f.workers.dev",
   },
 
   // ── Staging: backs PR preview deploys of the web Worker ───────────────────
