@@ -7,6 +7,7 @@ import { authClient } from '@/lib/auth-client'
 
 import { FieldMessage, SectionCard } from './section-card'
 import { inputClass, labelClass, primaryButtonClass } from './styles'
+import { LoadingState } from '@/components/states'
 
 const MIN_PASSWORD_LENGTH = 8
 
@@ -73,7 +74,7 @@ export function PasswordSection() {
       icon={KeyRound}
     >
       {mode === 'loading' ? (
-        <p className="text-sm text-gray-500">Loading…</p>
+        <LoadingState />
       ) : mode === 'none' ? (
         // TODO: let social/passkey-only accounts set a password
         // (Better Auth's server-only `setPassword`).

@@ -94,7 +94,7 @@ export function CommandPalette({
       open={open}
       onOpenChange={onOpenChange}
       label="Command palette"
-      overlayClassName="fixed inset-0 z-50 bg-black/40"
+      overlayClassName="fixed inset-0 z-50 frosted-backdrop"
       contentClassName="fixed top-[15vh] left-1/2 z-50 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl"
     >
       <div className="flex items-center gap-2 border-b border-gray-200 px-3">

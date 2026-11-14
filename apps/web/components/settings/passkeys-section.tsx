@@ -13,6 +13,7 @@ import {
   primaryButtonClass,
   secondaryButtonClass,
 } from './styles'
+import { EmptyState, LoadingState } from '@/components/states'
 
 type Passkey = {
   id: string
@@ -185,11 +186,13 @@ export function PasskeysSection() {
       )}
 
       {passkeys === null ? (
-        <p className="text-sm text-gray-500">Loading…</p>
+        <LoadingState />
       ) : passkeys.length === 0 ? (
-        <p className="text-sm text-gray-500">
-          No passkeys yet. Add one to sign in faster on this device.
-        </p>
+        <EmptyState
+          icon={Fingerprint}
+          title="No passkeys yet"
+          description="Add one to sign in faster on this device."
+        />
       ) : (
         <ul className="flex flex-col gap-2">
           {passkeys.map((pk) => (

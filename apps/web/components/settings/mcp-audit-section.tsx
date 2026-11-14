@@ -3,6 +3,7 @@
 import { ChevronRight, ScrollText } from 'lucide-react'
 
 import { SectionCard } from './section-card'
+import { EmptyState } from '@/components/states'
 
 export type McpAuditEntry = {
   id: string
@@ -29,9 +30,11 @@ export function McpAuditSection({ entries }: { entries: McpAuditEntry[] }) {
       icon={ScrollText}
     >
       {entries.length === 0 ? (
-        <p className="text-sm text-gray-500">
-          No calls yet. They'll appear here as your assistants use the tools.
-        </p>
+        <EmptyState
+          icon={ScrollText}
+          title="No calls yet"
+          description="They'll appear here as your assistants use the tools."
+        />
       ) : (
         <ul className="-my-1 divide-y divide-gray-100">
           {entries.map((entry) => (

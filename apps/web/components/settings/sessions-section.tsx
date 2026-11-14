@@ -8,6 +8,7 @@ import { describeUserAgent } from '@/lib/user-agent'
 
 import { FieldMessage, SectionCard } from './section-card'
 import { secondaryButtonClass } from './styles'
+import { LoadingState } from '@/components/states'
 
 type Session = {
   id: string
@@ -122,7 +123,7 @@ export function SessionsSection() {
       }
     >
       {sessions === null ? (
-        <p className="text-sm text-gray-500">Loading…</p>
+        <LoadingState />
       ) : (
         <ul className="flex flex-col gap-2">
           {sortSessions(sessions, currentId).map((s) => {

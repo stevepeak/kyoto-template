@@ -4,6 +4,7 @@ import { History } from 'lucide-react'
 import { describeUserAgent } from '@/lib/user-agent'
 
 import { SectionCard } from './section-card'
+import { EmptyState } from '@/components/states'
 
 export type SecurityEventEntry = {
   id: string
@@ -55,7 +56,7 @@ export function SecurityLogSection({
       icon={History}
     >
       {entries.length === 0 ? (
-        <p className="text-sm text-gray-500">No activity recorded yet.</p>
+        <EmptyState icon={History} title="No activity recorded yet" />
       ) : (
         <ul className="-my-2 divide-y divide-gray-100">
           {entries.map((entry) => (

@@ -5,6 +5,7 @@ import { Bell, Lock } from 'lucide-react'
 import { trpc } from '@/lib/trpc'
 
 import { FieldMessage, SectionCard } from './section-card'
+import { LoadingState } from '@/components/states'
 
 function Toggle({
   checked,
@@ -67,7 +68,7 @@ export function NotificationsSection() {
       icon={Bell}
     >
       {prefs.isPending ? (
-        <p className="text-sm text-gray-500">Loading…</p>
+        <LoadingState />
       ) : (
         <ul className="flex flex-col divide-y divide-gray-100">
           <li className="flex items-center gap-3 py-3 first:pt-0">

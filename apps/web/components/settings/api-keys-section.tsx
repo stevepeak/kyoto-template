@@ -13,6 +13,7 @@ import {
   primaryButtonClass,
   secondaryButtonClass,
 } from './styles'
+import { EmptyState, LoadingState } from '@/components/states'
 
 type ApiKey = {
   id: string
@@ -165,9 +166,13 @@ export function ApiKeysSection() {
       )}
 
       {keys === null ? (
-        <p className="text-sm text-gray-500">Loading…</p>
+        <LoadingState />
       ) : keys.length === 0 ? (
-        <p className="text-sm text-gray-500">No API keys yet.</p>
+        <EmptyState
+          icon={KeySquare}
+          title="No API keys yet"
+          description="Create one to call the API from your own scripts and tools."
+        />
       ) : (
         <ul className="flex flex-col gap-2">
           {keys.map((key) => (

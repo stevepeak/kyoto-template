@@ -4,6 +4,7 @@ import { UserCircle } from 'lucide-react'
 import { type ChangeEvent, type FormEvent, useRef, useState } from 'react'
 
 import { authClient } from '@/lib/auth-client'
+import { uploadFile } from '@/lib/upload-client'
 
 import { FieldMessage, SectionCard } from './section-card'
 import {
@@ -39,23 +40,17 @@ export function ProfileSection({
     setIsUploading(true)
     setMsg({})
     try {
-      const body = new FormData()
-      body.append('file', file)
-      const res = await fetch('/api/avatar', { method: 'POST', body })
-      const json = (await res.json().catch(() => ({}))) as {
-        url?: string
-        error?: string
-      }
-      if (!res.ok || !json.url) {
-        setMsg({ error: json.error || 'Failed to upload your photo' })
+      const upload = await uploadFile('/api/avatar', file)
+      if ('error' in upload) {
+        setMsg({ error: upload.error })
         return
       }
-      const { error } = await authClient.updateUser({ image: json.url })
+      const { error } = await authClient.updateUser({ image: upload.url })
       if (error) {
         setMsg({ error: error.message || 'Failed to save your photo' })
         return
       }
-      setImage(json.url)
+      setImage(upload.url)
       setMsg({ success: 'Photo updated' })
     } finally {
       setIsUploading(false)

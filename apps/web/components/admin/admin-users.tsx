@@ -7,6 +7,7 @@ import { type FormEvent, useCallback, useEffect, useState } from 'react'
 import { FieldMessage, SectionCard } from '@/components/settings/section-card'
 import { inputClass, secondaryButtonClass } from '@/components/settings/styles'
 import { authClient } from '@/lib/auth-client'
+import { EmptyState, LoadingState } from '@/components/states'
 
 /** Users per page. */
 const PAGE_SIZE = 25
@@ -122,9 +123,9 @@ export function AdminUsers({ currentUserId }: AdminUsersProps) {
       </form>
 
       {users === null ? (
-        <p className="text-sm text-gray-500">Loading…</p>
+        <LoadingState />
       ) : users.length === 0 ? (
-        <p className="text-sm text-gray-500">No users found.</p>
+        <EmptyState icon={Search} title="No users found" />
       ) : (
         <ul className="flex flex-col gap-2">
           {users.map((u) => {

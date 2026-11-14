@@ -1,14 +1,7 @@
 import { headers } from 'next/headers'
 
 import { getAuth } from '@/lib/auth'
-import {
-  AVATAR_CONTENT_TYPES,
-  AVATAR_MAX_BYTES,
-  avatarBucket,
-  avatarKeyFromUrl,
-  avatarUrl,
-  pruneAvatars,
-} from '@/lib/avatars'
+import { avatars } from '@/lib/avatars'
 
 /**
  * Uploads a profile picture to R2 and returns its URL. The client then saves
@@ -26,36 +19,14 @@ export async function POST(req: Request) {
   })
   if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const form = await req.formData().catch(() => null)
-  const file = form?.get('file')
-  if (!(file instanceof File)) {
-    return Response.json({ error: 'No file uploaded' }, { status: 400 })
-  }
-  if (!(AVATAR_CONTENT_TYPES as readonly string[]).includes(file.type)) {
-    return Response.json(
-      { error: 'Use a PNG, JPEG, WebP or GIF image' },
-      { status: 415 },
-    )
-  }
-  if (file.size > AVATAR_MAX_BYTES) {
-    return Response.json(
-      { error: 'Image must be 2 MB or smaller' },
-      { status: 413 },
-    )
-  }
+  const upload = await avatars.readFile(req)
+  if ('error' in upload) return upload.error
 
   const userId = session.user.id
-  const key = `${userId}/${crypto.randomUUID()}`
-  const bucket = avatarBucket()
-  await bucket.put(key, await file.arrayBuffer(), {
-    httpMetadata: { contentType: file.type },
-  })
-  await pruneAvatars(bucket, userId, [
-    key,
-    avatarKeyFromUrl(session.user.image),
-  ])
+  const { key, url } = await avatars.put(userId, upload.file)
+  await avatars.prune(userId, [key, avatars.keyFromUrl(session.user.image)])
 
-  return Response.json({ url: avatarUrl(key) })
+  return Response.json({ url })
 }
 
 /**
@@ -69,8 +40,6 @@ export async function DELETE() {
   })
   if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
-  await pruneAvatars(avatarBucket(), session.user.id, [
-    avatarKeyFromUrl(session.user.image),
-  ])
+  await avatars.prune(session.user.id, [avatars.keyFromUrl(session.user.image)])
   return new Response(null, { status: 204 })
 }
