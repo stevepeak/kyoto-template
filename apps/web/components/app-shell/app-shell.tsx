@@ -12,17 +12,43 @@ import { PRODUCT_NAME } from '@/lib/brand'
 
 import { AccountMenu, type AccountUser } from './account-menu'
 import { ImpersonationBanner } from './impersonation-banner'
-import { ADMIN_NAV_ITEMS, NAV_ITEMS } from './nav'
+import { ADMIN_NAV_ITEMS, NAV_ITEMS, type NavItem } from './nav'
 
 function isActive(pathname: string, href: string): boolean {
   return href === '/' ? pathname === '/' : pathname.startsWith(href)
+}
+
+function NavLink({
+  item: { href, label, icon: Icon },
+  active,
+  onNavigate,
+}: {
+  item: NavItem
+  active: boolean
+  onNavigate: () => void
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onNavigate}
+      aria-current={active ? 'page' : undefined}
+      className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-sm ${
+        active
+          ? 'bg-gray-100 font-medium text-gray-900'
+          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+      }`}
+    >
+      <Icon className="h-4 w-4" aria-hidden="true" />
+      {label}
+    </Link>
+  )
 }
 
 interface AppShellProps {
   children: ReactNode
   /** The server-read session user, used until the client session resolves. */
   initialUser: AccountUser | null
-  /** Show the admin entries (007 console, setup, admin) in the sidebar nav. */
+  /** Show the admin section (emails, 007 console, setup) in the sidebar nav. */
   isAdmin: boolean
   /** An admin is signed in as `initialUser` — show the way back. */
   isImpersonating: boolean
@@ -59,8 +85,6 @@ export function AppShell({
     )
   }
 
-  const navItems = isAdmin ? [...NAV_ITEMS, ...ADMIN_NAV_ITEMS] : NAV_ITEMS
-
   const sidebar = (
     <div className="flex h-full flex-col">
       <div className="flex h-14 items-center justify-between px-4">
@@ -93,25 +117,29 @@ export function AppShell({
       </div>
 
       <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-2 py-2">
-        {navItems.map(({ href, label, icon: Icon }) => {
-          const active = isActive(pathname, href)
-          return (
-            <Link
-              key={href}
-              href={href}
-              onClick={() => setMobileOpen(false)}
-              aria-current={active ? 'page' : undefined}
-              className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-sm ${
-                active
-                  ? 'bg-gray-100 font-medium text-gray-900'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              }`}
-            >
-              <Icon className="h-4 w-4" aria-hidden="true" />
-              {label}
-            </Link>
-          )
-        })}
+        {NAV_ITEMS.map((item) => (
+          <NavLink
+            key={item.href}
+            item={item}
+            active={isActive(pathname, item.href)}
+            onNavigate={() => setMobileOpen(false)}
+          />
+        ))}
+        {isAdmin && (
+          <div className="mt-3 flex flex-col gap-0.5 rounded-md border border-dotted border-gray-300 p-1">
+            <span className="px-2 py-1 text-xs font-medium text-gray-400">
+              Admin
+            </span>
+            {ADMIN_NAV_ITEMS.map((item) => (
+              <NavLink
+                key={item.href}
+                item={item}
+                active={isActive(pathname, item.href)}
+                onNavigate={() => setMobileOpen(false)}
+              />
+            ))}
+          </div>
+        )}
       </nav>
 
       <div className="border-t border-gray-200 p-2">

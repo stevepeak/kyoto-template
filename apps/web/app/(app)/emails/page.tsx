@@ -7,6 +7,7 @@ import { notFound, redirect } from 'next/navigation'
 import { EmailViewer } from '@/components/emails/email-viewer'
 import { getAuth } from '@/lib/auth'
 import { configuredAppUrl } from '@/lib/mcp-resources'
+import { canUseWorkflows } from '@/lib/wf-access'
 
 export const metadata: Metadata = { title: 'Emails' }
 
@@ -26,6 +27,7 @@ export default async function EmailsPage({ searchParams }: EmailsPageProps) {
   // The proxy only checks for a cookie; this is the real check.
   const session = await getAuth().api.getSession({ headers: await headers() })
   if (!session) redirect('/login?redirectTo=/emails')
+  if (!canUseWorkflows(session.user.email)) notFound()
 
   const params = await searchParams
   const first = EMAIL_PREVIEWS[0]
