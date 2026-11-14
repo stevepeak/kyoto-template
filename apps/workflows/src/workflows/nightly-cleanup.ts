@@ -22,9 +22,12 @@ export class NightlyCleanup extends WorkflowEntrypoint<Env, Params> {
     const stale = await step.do(
       'find-stale-records',
       { retries: { limit: 3, delay: '10 second', backoff: 'exponential' } },
-      async () => {
-        // Replace with a real query against D1 / your database.
-        return [{ userId: 'demo-user-1' }, { userId: 'demo-user-2' }]
+      () => {
+        // TODO: replace with a real query against D1.
+        return Promise.resolve([
+          { userId: 'demo-user-1' },
+          { userId: 'demo-user-2' },
+        ])
       },
     )
 

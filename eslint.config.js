@@ -1,75 +1,46 @@
-import { defineESLintConfig } from '@ocavue/eslint-config'
+// Imported by relative path on purpose: this is the same file every workspace
+// gets via `@kyoto/eslint-config`, and the root has no dependency edge to it.
+import { config } from './config/eslint/server.js'
 
-export default defineESLintConfig(
+/**
+ * The repo root's own lint scope: the root-level files that have no workspace
+ * `eslint.config.js` above them. Every workspace lints itself
+ * (`turbo run lint`), and ESLint resolves a config per file from that file's
+ * own directory upward — so this config ignores the workspaces outright and
+ * only covers the remainder (root `package.json`, `scripts/`).
+ */
+export default [
+  ...config,
   {
-    react: true,
-    markdown: false,
+    // Private monorepo — package.json metadata polish doesn't apply.
+    files: ['**/package.json'],
+    rules: {
+      'package-json/require-files': 'off',
+      'package-json/require-license': 'off',
+      'package-json/require-repository': 'off',
+      'package-json/repository-shorthand': 'off',
+      'package-json/valid-workspaces': 'off',
+      'package-json/order-properties': 'off',
+      'package-json/sort-collections': 'off',
+    },
   },
   {
     ignores: [
-      '**/*.md',
-      '**/*.json',
       '**/dist/**',
       '**/node_modules/**',
-      'docs/**',
-      'packages/**/*.md',
-      // Additional ignores for memory optimization
-      '**/*.d.ts',
-      '**/*.min.js',
-      '**/coverage/**',
       '**/.turbo/**',
       '**/.wrangler/**',
       '**/.next/**',
-      '**/*.config.js',
-      '**/postcss.config.js',
-      '**/tailwind.config.js',
-      '**/next.config.js',
-      // Ignore bin directory files (executable scripts)
+      '**/.open-next/**',
+      '**/coverage/**',
       '**/bin/**',
+      // Root-level config files belong to no tsconfig project.
+      '*.config.js',
+      'knip.config.ts',
+      // Every workspace lints itself.
+      'apps/**',
+      'packages/**',
+      'config/**',
     ],
   },
-  {
-    rules: {
-      // Require curly braces for all control statements
-      curly: ['error', 'all'],
-      // Ignore import ordering
-      'import/order': 'off',
-      'sort-imports': 'off',
-      // Disable unicorn explicit length check rule
-      'unicorn/explicit-length-check': 'off',
-      // Disable TypeScript unsafe assignment and call rules
-      '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-unsafe-call': 'off',
-    },
-  },
-  {
-    // Prevent importing server-side code in client-side code
-    files: [
-      'apps/web/components/**/*.{ts,tsx}',
-      'apps/web/hooks/**/*.{ts,tsx}',
-      'apps/web/lib/**/*.{ts,tsx}',
-    ],
-    ignores: [],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            {
-              group: ['@app/api', '@app/api/*'],
-              message:
-                'Do not import from @app/api in client-side code. Use @app/utils for shared constants and types, or use TRPC hooks for data fetching.',
-              allowTypeImports: true, // Allow type-only imports
-            },
-            {
-              group: ['@app/db', '@app/db/*'],
-              message:
-                'Do not import from @app/db in client-side code. Use TRPC for database access.',
-              allowTypeImports: true, // Allow type-only imports
-            },
-          ],
-        },
-      ],
-    },
-  },
-)
+]

@@ -75,7 +75,7 @@ export function AuthCard() {
       setError(listError.message || 'Failed to load passkeys')
       return
     }
-    setPasskeys((data as Passkey[]) ?? [])
+    setPasskeys(data ?? [])
   }, [])
 
   useEffect(() => {

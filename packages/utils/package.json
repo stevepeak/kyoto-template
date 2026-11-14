@@ -21,6 +21,6 @@
   },
   "dependencies": {
     "@sindresorhus/is": "^8.1.0",
-    "ts-dedent": "^2.2.0"
+    "ts-dedent": "^2.3.0"
   }
 }

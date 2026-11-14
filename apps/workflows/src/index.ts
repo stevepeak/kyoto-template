@@ -84,10 +84,10 @@ export default class WorkflowsService
 
     // POST /runs  — public start endpoint (mainly for local dev / fallback)
     if (url.pathname === '/runs' && request.method === 'POST') {
-      const body = (await request.json()) as {
+      const body = await request.json<{
         workflow: WorkflowName
         params?: unknown
-      }
+      }>()
       const result = await startRun(env, body.workflow, body.params)
       return Response.json(result, { headers: corsHeaders })
     }
@@ -100,7 +100,11 @@ export default class WorkflowsService
         return new Response('unauthorized', { status: 401 })
       }
       const room = env.RUN_ROOM.get(env.RUN_ROOM.idFromName(runId))
-      return Response.json(await room.getState(runId), { headers: corsHeaders })
+      // DO stub methods return `Rpc.Result`, which typescript-eslint can't
+      // see as thenable even though it is a Promise at runtime.
+      // eslint-disable-next-line @typescript-eslint/await-thenable
+      const state = await room.getState(runId)
+      return Response.json(state, { headers: corsHeaders })
     }
 
     // GET /runs/:id/stream  — SSE stream
@@ -121,7 +125,7 @@ export default class WorkflowsService
         return new Response('unauthorized', { status: 401 })
       }
       const id = env.RUN_ROOM.idFromName(runId)
-      return env.RUN_ROOM.get(id).fetch(request)
+      return await env.RUN_ROOM.get(id).fetch(request)
     }
 
     if (url.pathname === '/' || url.pathname === '/health') {

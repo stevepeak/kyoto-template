@@ -1,8 +1,4 @@
-import {
-  type RunState,
-  type RunStatus,
-  type WorkflowName,
-} from '@app/workflows-client'
+import type { RunState, RunStatus, WorkflowName } from '@app/workflows-client'
 import { DurableObject } from 'cloudflare:workers'
 
 interface PersistedState {

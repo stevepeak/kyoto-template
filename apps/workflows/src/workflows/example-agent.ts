@@ -45,9 +45,7 @@ export class ExampleAgent extends WorkflowEntrypoint<Env, Params> {
 
         try {
           const output = await exampleAgent({
-            model: model as unknown as Parameters<
-              typeof exampleAgent
-            >[0]['model'],
+            model: model,
             name,
           })
           await room.append('progress', 'Agent completed successfully!')

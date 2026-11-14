@@ -26,9 +26,10 @@ export async function handleNotificationsBatch(
   }
 }
 
-async function deliver(body: unknown): Promise<void> {
+function deliver(body: unknown): Promise<void> {
   // Plug in Resend / Postmark / SES / Slack / whatever here. For now we just
   // log so the local dev story is observable.
   // eslint-disable-next-line no-console
   console.log('[notifications] delivering', body)
+  return Promise.resolve()
 }

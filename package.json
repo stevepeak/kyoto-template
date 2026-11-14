@@ -12,24 +12,24 @@
       "packages/*"
     ],
     "catalog": {
-      "@openrouter/ai-sdk-provider": "^2.9.0",
+      "@openrouter/ai-sdk-provider": "^3.1.0",
       "@opentelemetry/api": "^1.9.1",
       "@opentelemetry/sdk-node": "^0.218.0",
       "@sentry/node": "^10.53.1",
       "@sentry/opentelemetry": "^10.53.1",
-      "@tanstack/react-query": "^5.100.11",
-      "@trpc/client": "^11.17.0",
-      "@trpc/react-query": "^11.17.0",
-      "@trpc/server": "^11.17.0",
-      "@types/node": "^25.9.0",
-      "ai": "^6.0.185",
-      "drizzle-orm": "^0.45.2",
-      "eslint": "^10.4.0",
+      "@tanstack/react-query": "^5.107.1",
+      "@trpc/client": "^11.28.2",
+      "@trpc/react-query": "^11.28.2",
+      "@trpc/server": "^11.28.2",
+      "@types/node": "^26.6.6",
+      "ai": "^7.0.173",
+      "drizzle-orm": "^0.45.4",
+      "eslint": "^10.15.0",
       "import-in-the-middle": "^3.0.1",
-      "posthog-js": "^1.374.2",
-      "posthog-node": "^5.34.5",
-      "typescript": "^6.0.3",
-      "zod": "^4.4.3"
+      "posthog-js": "^1.449.2",
+      "posthog-node": "^5.73.1",
+      "typescript": "npm:@typescript/typescript6@^6.0.2",
+      "zod": "^4.6.7"
     }
   },
   "scripts": {
@@ -49,22 +49,21 @@
     "kill": "&& lsof -i :3000 -t | xargs -r kill && lsof -i :3001 -t | xargs -r kill && lsof -i :6006 -t | xargs -r kill"
   },
   "devDependencies": {
-    "@ocavue/eslint-config": "^4.5.7",
-    "@ocavue/tsconfig": "^0.7.1",
     "eslint": "^10.4.0",
     "knip": "^6.14.1",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.5",
-    "prettier": "^3.6.2",
-    "turbo": "^2.9.14",
-    "typescript": "^6.0.3"
+    "prettier": "^3.10.1",
+    "turbo": "^2.11.11",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "@typescript/native": "npm:typescript@^7.0.2"
   },
   "lint-staged": {
     "*.{js,ts,tsx,json,md,mdx}": [
       "prettier --write"
     ]
   },
-  "packageManager": "bun@1.1.42",
+  "packageManager": "bun@1.4.3",
   "engines": {
     "bun": "1"
   }

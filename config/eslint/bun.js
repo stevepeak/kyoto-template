@@ -1,14 +1,11 @@
-import { config as dexaConfig } from '@dexaai/config/eslint'
+import { createConfig } from './create.js'
 
-export const config = [
-  ...dexaConfig,
-  {
-    languageOptions: { globals: { Bun: true } },
-  },
-  {
-    rules: {
-      '@typescript-eslint/consistent-type-definitions': 'off',
-    },
-  },
-  { ignores: ['knip.ts', 'eslint.config.js'] },
-]
+/**
+ * The React-enabled preset: for workspaces that actually have a `react`
+ * dependency (`apps/web`, `packages/email`). Everything server-only should
+ * import `@kyoto/eslint-config/server.js` instead — same rules, without the two
+ * React plugin sets. See `create.js` for why the split exists.
+ *
+ * @type {import("eslint").Linter.Config[]}
+ */
+export const config = await createConfig({ react: true })

@@ -1,4 +1,4 @@
-import { config } from '@kyoto/eslint-config/bun.js'
+import { config } from '@kyoto/eslint-config/server.js'
 
 /** @type {import("eslint").Linter.Config[]} */
 

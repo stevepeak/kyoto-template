@@ -1,4 +1,4 @@
-import { type WorkflowsRpc } from '@app/workflows-client'
+import type { WorkflowsRpc } from '@app/workflows-client'
 
 /**
  * tRPC request context. Populated in apps/web/app/api/trpc/[trpc]/route.ts —

@@ -5,13 +5,17 @@
   "type": "module",
   "types": "./bun.js",
   "files": [
-    "bun.js"
+    "bun.js",
+    "create.js",
+    "server.js"
   ],
   "devDependencies": {
-    "@dexaai/config": "^0.0.10",
     "eslint": "catalog:"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "dependencies": {
+    "@ocavue/eslint-config": "^4.24.0"
   }
 }

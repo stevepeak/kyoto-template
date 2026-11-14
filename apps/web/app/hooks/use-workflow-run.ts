@@ -51,7 +51,6 @@ export function useWorkflowRun<T = unknown>({
   const [error, setError] = useState<Error | null>(null)
 
   const toastIdRef = useRef<string | number | null>(null)
-  const lastRunIdRef = useRef<string | null>(null)
 
   // Refs to keep callbacks stable across re-renders.
   const onCompleteRef = useRef(onComplete)
@@ -66,13 +65,18 @@ export function useWorkflowRun<T = unknown>({
     toastMessagesRef.current = toastMessages
   })
 
-  // Reset when runId changes.
+  // Reset when runId changes — adjusted during render rather than in an
+  // effect, so the reset doesn't cascade a second render.
+  const [lastRunId, setLastRunId] = useState(runId)
+  if (runId !== lastRunId) {
+    setLastRunId(runId)
+    setStatus(runId ? 'running' : 'idle')
+    setOutput(null)
+    setError(null)
+  }
+
   useEffect(() => {
-    if (runId !== lastRunIdRef.current) {
-      lastRunIdRef.current = runId
-      setStatus(runId ? 'running' : 'idle')
-      setOutput(null)
-      setError(null)
+    return () => {
       if (toastIdRef.current) {
         toast.dismiss(toastIdRef.current)
         toastIdRef.current = null
@@ -96,7 +100,7 @@ export function useWorkflowRun<T = unknown>({
     source.onmessage = (event) => {
       let parsed: { type: string; channel?: string; data: unknown }
       try {
-        parsed = JSON.parse(event.data) as typeof parsed
+        parsed = JSON.parse(event.data as string) as typeof parsed
       } catch {
         return
       }
@@ -126,7 +130,7 @@ export function useWorkflowRun<T = unknown>({
       }
 
       if (parsed.type === 'stream' && parsed.channel === 'progress') {
-        const text = String(parsed.data ?? '')
+        const text = stringify(parsed.data, '')
         aggregated = aggregated ? `${aggregated}\n${text}` : text
         onStreamTextRef.current?.(text)
         if (showToast && toastIdRef.current) {
@@ -179,7 +183,7 @@ export function useWorkflowRun<T = unknown>({
       }
 
       if (parsed.type === 'error') {
-        const err = new Error(String(parsed.data ?? 'Workflow error'))
+        const err = new Error(stringify(parsed.data, 'Workflow error'))
         setError(err)
         setStatus('failed')
         onErrorRef.current?.(err)
@@ -212,4 +216,9 @@ export function useWorkflowRun<T = unknown>({
     output,
     error,
   }
+}
+
+function stringify(value: unknown, fallback: string): string {
+  if (value == null) return fallback
+  return typeof value === 'string' ? value : JSON.stringify(value)
 }
