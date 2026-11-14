@@ -11,7 +11,7 @@
   "scripts": {
     "clean": "rm -rf node_modules dist .wrangler",
     "predev": "test -e .dev.vars || ln -sf ../../.env .dev.vars",
-    "dev": "wrangler dev --port 8787 --persist-to ../../.wrangler/state",
+    "dev": "bun --env-file=../../.env wrangler dev --port 8787 --persist-to ../../.wrangler/state",
     "predev:scheduled": "test -e .dev.vars || ln -sf ../../.env .dev.vars",
     "dev:scheduled": "wrangler dev --port 8787 --persist-to ../../.wrangler/state --test-scheduled",
     "deploy": "wrangler deploy --var \"WF_SDK_RELEASE:$(git rev-parse HEAD:packages/007)\"",

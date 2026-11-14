@@ -51,12 +51,12 @@ local_resource(
 local_resource(
     name='D1 Migrate (local)',
     labels=["Development"],
-    cmd="bun run db:migrate:local",
+    cmd="bun run db:migrate:local && bun run --cwd apps/web db:seed:local",
 )
 cmd_button(
     name="btn-d1-delete-data",
     resource="D1 Migrate (local)",
     icon_name="delete",
     text="Delete Data",
-    argv=["sh", "-c", "rm -rf .wrangler/state/v3/d1 && echo 'Local D1 deleted. Re-run D1 Migrate (local).'"],
+    argv=["sh", "-c", "rm -rf .wrangler/state/v3/d1 && echo 'Local D1 deleted. Re-run D1 Migrate (local) to migrate and seed.'"],
 )

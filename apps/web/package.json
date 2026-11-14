@@ -6,7 +6,7 @@
   "scripts": {
     "clean": "rm -rf node_modules dist",
     "predev": "test -e .dev.vars || ln -sf ../../.env .dev.vars",
-    "dev": "next dev --port 3000 --turbo",
+    "dev": "bun --env-file=../../.env next dev --port 3000 --turbo",
     "build": "bun --env-file=../../.env next build --turbo",
     "build:cloudflare": "opennextjs-cloudflare build",
     "preview:cloudflare": "opennextjs-cloudflare build && opennextjs-cloudflare preview",

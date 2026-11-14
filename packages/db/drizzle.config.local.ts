@@ -1,4 +1,3 @@
-import Database from 'better-sqlite3'
 import { defineConfig } from 'drizzle-kit'
 
 import { findLocalD1 } from './src/local-d1'
@@ -10,28 +9,12 @@ import { findLocalD1 } from './src/local-d1'
 // REMOTE D1 whenever Cloudflare creds are in .env, so it never reflects local
 // dev data. This config points Studio straight at the on-disk SQLite file.
 //
-// There are now TWO local D1s (template-db and template-wf), both named after a content
-// hash, so the file is resolved by the tables it contains rather than by taking
-// the first .sqlite in the directory. See src/local-d1.ts for why `exclude`
-// matters. For the wf_* side, use drizzle.config.wf.local.ts.
+// Several local D1s share the state dir (template-db, template-wf, and stale
+// ones from earlier database ids), so the file is derived from template-db's
+// configured `database_id` — see src/local-d1.ts.
 //
 // Run from packages/db (the db:studio:local script passes --cwd), so
 // cwd-relative paths resolve against the repo root.
-function hasTable(file: string, table: string): boolean {
-  const db = new Database(file, { readonly: true, fileMustExist: true })
-  try {
-    return (
-      db
-        .prepare(
-          `select 1 from sqlite_master where type = 'table' and name = ?`,
-        )
-        .get(table) !== undefined
-    )
-  } finally {
-    db.close()
-  }
-}
-
 export default defineConfig({
   schema: './src/schema.ts',
   out: './migrations',
@@ -39,10 +22,8 @@ export default defineConfig({
   dbCredentials: {
     url: findLocalD1({
       stateDir: '../../.wrangler/state',
-      hasTable,
-      // An app table 007 does not have — present on any migrated template-db.
-      require: ['user'],
-      label: 'template-db',
+      wranglerConfig: 'wrangler.jsonc',
+      databaseName: 'template-db',
       hint: 'bun run db:migrate:local',
     }),
   },

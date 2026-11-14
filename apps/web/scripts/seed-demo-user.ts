@@ -21,26 +21,10 @@ const {
   name: DEMO_NAME,
 } = DEMO_USER
 
-// Not `readonly`: a read-only handle can't open a database whose WAL still
-// needs recovering, which miniflare's files often do.
-function hasTable(file: string, table: string): boolean {
-  const db = new Database(file, { readwrite: true, create: false })
-  try {
-    return (
-      db
-        .query(`select 1 from sqlite_master where type = 'table' and name = ?`)
-        .get(table) !== null
-    )
-  } finally {
-    db.close()
-  }
-}
-
 const file = findLocalD1({
   stateDir: '../../.wrangler/state',
-  hasTable,
-  require: ['user'],
-  label: 'template-db',
+  wranglerConfig: '../../packages/db/wrangler.jsonc',
+  databaseName: 'template-db',
   hint: 'bun run db:migrate:local',
 })
 
