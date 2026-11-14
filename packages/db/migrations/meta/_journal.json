@@ -15,6 +15,13 @@
       "when": 1794683518171,
       "tag": "0001_volatile_micromacro",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794684453574,
+      "tag": "0002_friendly_blob",
+      "breakpoints": true
     }
   ]
 }

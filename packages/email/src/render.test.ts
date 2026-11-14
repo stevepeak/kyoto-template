@@ -4,10 +4,12 @@ import { EMAIL_PREVIEWS } from './previews'
 import {
   renderPasskeyAddedEmail,
   renderPasswordResetEmail,
+  renderVerifyEmail,
   renderWelcomeEmail,
 } from './render'
 import PasskeyAddedEmail from './templates/passkey-added'
 import PasswordResetEmail from './templates/password-reset'
+import VerifyEmail from './templates/verify-email'
 import WelcomeEmail from './templates/welcome'
 
 /** Code points react-email's `<Preview>` pads with. */
@@ -46,6 +48,19 @@ describe('renderPasswordResetEmail', () => {
     expect(mail.text).toContain(resetUrl)
     expect(mail.text).toContain('60 minutes')
     expect(mail.text).toContain('has not been changed')
+  })
+})
+
+describe('renderVerifyEmail', () => {
+  test('carries the link and expiry in both parts', async () => {
+    const mail = await renderVerifyEmail(VerifyEmail.PreviewProps)
+    const { verifyUrl } = VerifyEmail.PreviewProps
+
+    expect(mail.subject).toBe('Confirm your email for Acme Co')
+    // The link has a query string; HTML attribute-escapes its `&`.
+    expect(mail.html).toContain(verifyUrl.replaceAll('&', '&amp;'))
+    expect(mail.text).toContain(verifyUrl)
+    expect(mail.text).toContain('60 minutes')
   })
 })
 

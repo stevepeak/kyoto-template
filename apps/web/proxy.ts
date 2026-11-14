@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 
 // TODO: list the routes that require a signed-in user.
 const protectedRoutes = ['/emails', '/settings', '/workflows']
-const authRoutes = ['/login']
+const authRoutes = ['/login', '/forgot-password']
 
 /**
  * Cookie-presence check only — no D1 read on every navigation. The real

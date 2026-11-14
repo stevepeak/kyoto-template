@@ -16,8 +16,10 @@ export {
   type RenderedEmail,
   renderPasskeyAddedEmail,
   renderPasswordResetEmail,
+  renderVerifyEmail,
   renderWelcomeEmail,
 } from './render'
 export { type PasskeyAddedEmailProps } from './templates/passkey-added'
 export { type PasswordResetEmailProps } from './templates/password-reset'
+export { type VerifyEmailProps } from './templates/verify-email'
 export { type WelcomeEmailProps } from './templates/welcome'

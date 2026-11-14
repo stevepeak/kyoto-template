@@ -1,11 +1,15 @@
 import { type DB, schema } from '@app/db'
-import { renderPasskeyAddedEmail, renderPasswordResetEmail } from '@app/email'
+import {
+  renderPasskeyAddedEmail,
+  renderPasswordResetEmail,
+  renderVerifyEmail,
+} from '@app/email'
 import { mcp } from '@better-auth/mcp'
 import { passkey } from '@better-auth/passkey'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { createAuthMiddleware } from 'better-auth/api'
-import { jwt, lastLoginMethod } from 'better-auth/plugins'
+import { captcha, jwt, lastLoginMethod } from 'better-auth/plugins'
 
 import { cfVar } from './cf-env'
 import { getDb } from './db'
@@ -24,6 +28,9 @@ import {
  * the email, so the number a reader is told is the number the server enforces.
  */
 const RESET_PASSWORD_EXPIRES_IN_SECONDS = 60 * 60
+
+/** Lifetime of an email-verification link — same deal as the reset link. */
+const VERIFY_EMAIL_EXPIRES_IN_SECONDS = 60 * 60
 
 /**
  * Tells the account owner a passkey was registered. Runs as an `after` hook
@@ -71,6 +78,22 @@ export function isGoogleEnabled(): boolean {
   return googleConfig() !== null
 }
 
+/** Turnstile is enabled only when both the site key and secret are set. */
+function turnstileConfig() {
+  const siteKey = cfVar('TURNSTILE_SITE_KEY')
+  const secretKey = cfVar('TURNSTILE_SECRET_KEY')
+  return siteKey && secretKey ? { siteKey, secretKey } : null
+}
+
+/**
+ * The public site key for the auth forms' Turnstile widget, or null when
+ * Turnstile is off. Null must mean the server isn't checking either —
+ * otherwise every sign-in would fail with a missing captcha response.
+ */
+export function turnstileSiteKey(): string | null {
+  return turnstileConfig()?.siteKey ?? null
+}
+
 /**
  * Builds a request-scoped Better Auth instance bound to the D1 database.
  *
@@ -80,6 +103,7 @@ export function isGoogleEnabled(): boolean {
  */
 export function getAuth(db: DB = getDb()) {
   const google = googleConfig()
+  const turnstile = turnstileConfig()
   const wfResource = resourceUrl(WF_MCP_PATH)
   const appResource = resourceUrl(APP_MCP_PATH)
 
@@ -98,15 +122,49 @@ export function getAuth(db: DB = getDb()) {
     session: {
       cookieCache: { enabled: true, maxAge: 60 },
     },
+    // Counters live in D1 (`rate_limit`): the default in-memory store is per
+    // isolate, which on Workers means barely limited at all. Better Auth
+    // already applies tighter built-in rules to sign-in/sign-up (3 per 10s)
+    // and reset/verification mail (3 per 60s) on top of this default.
+    // Off in development unless `enabled` is forced.
+    rateLimit: {
+      storage: 'database',
+      modelName: 'rateLimit',
+      // TODO: tune the default budget for everything else under /api/auth.
+      window: 60,
+      max: 100,
+      customRules: {
+        // Polled by every client on focus; each check would be a D1 write.
+        '/get-session': false,
+      },
+    },
+    emailVerification: {
+      sendVerificationEmail: async ({ user, url }) => {
+        const mail = await renderVerifyEmail({
+          verifyUrl: url,
+          expiresInMinutes: VERIFY_EMAIL_EXPIRES_IN_SECONDS / 60,
+        })
+        await sendEmail({ to: user.email, ...mail })
+      },
+      expiresIn: VERIFY_EMAIL_EXPIRES_IN_SECONDS,
+      sendOnSignUp: true,
+      // An unverified account that tries to sign in gets a fresh link, so a
+      // lost or expired first email isn't a dead end.
+      sendOnSignIn: true,
+      autoSignInAfterVerification: true,
+    },
     emailAndPassword: {
       // TODO: decide whether email/password stays on and whether sign-up is
       // open (`disableSignUp`).
-      // TODO: email verification (`emailVerification.sendVerificationEmail`),
-      // email OTP and magic-link sign-in are available as Better Auth options
-      // — not enabled; owner decision.
+      // TODO: email OTP and magic-link sign-in are available as Better Auth
+      // plugins — not enabled; owner decision.
       enabled: true,
+      // Without this anyone can sign up as an address they don't own.
+      requireEmailVerification: true,
       // TODO: reset-link lifetime — Better Auth's default is 1 hour.
       resetPasswordTokenExpiresIn: RESET_PASSWORD_EXPIRES_IN_SECONDS,
+      // Whoever forced the reset may already be signed in elsewhere.
+      revokeSessionsOnPasswordReset: true,
       sendResetPassword: async ({ user, url }) => {
         const mail = await renderPasswordResetEmail({
           resetUrl: url,
@@ -136,6 +194,17 @@ export function getAuth(db: DB = getDb()) {
     },
     plugins: [
       passkey(),
+      // Bot check on sign-up, email sign-in and password-reset requests (the
+      // plugin's default endpoints). The client sends the widget's token in
+      // `x-captcha-response`.
+      ...(turnstile
+        ? [
+            captcha({
+              provider: 'cloudflare-turnstile',
+              secretKey: turnstile.secretKey,
+            }),
+          ]
+        : []),
       lastLoginMethod(),
       // `jwt()` signs the access tokens `mcp()` issues.
       jwt(),

@@ -12,15 +12,16 @@ two MCP servers behind OAuth.
 
 ## What's included
 
-| Feature                                                                                                                                                               | Where                                          |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| **Cloudflare everything** — two Workers (web + workflows), D1, Email Sending, Workflows, Durable Objects, Queues                                                      | `apps/*/wrangler.jsonc`                        |
-| **D1 + Drizzle** — `createDb(env.DB)`; in-memory `freshDb()` for tests that replays real migrations and enforces D1 limits                                            | `packages/db`                                  |
-| **User accounts** — better-auth, per-request on D1; email/password, **Google** (shown only when configured), **passkeys**; `/login`                                   | `apps/web/lib/auth.ts`                         |
-| **007** — workflow authoring console at `/workflows`, durable runs in the workflows Worker, its own D1 (`WF_DB`)                                                      | `packages/007` (submodule), `packages/wf-host` |
-| **MCP** — app MCP at `/api/mcp` (`whoami`), 007 MCP at `/api/wf/mcp[/write]`; OAuth 2.1 via better-auth `mcp()` with dynamic client registration and a consent screen | `apps/web/lib/app-mcp.ts`, `lib/wf-mcp.ts`     |
-| **React Email** — templates + render to `{subject, html, text}`, sent through the Cloudflare `EMAIL` binding (logged in dev)                                          | `packages/email`, `apps/web/lib/email.ts`      |
-| **Legal pages** — `/privacy` and `/terms` templates with a "Draft" banner until finalised                                                                             | `apps/web/lib/legal`                           |
+| Feature                                                                                                                                                                            | Where                                                                |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| **Cloudflare everything** — two Workers (web + workflows), D1, Email Sending, Workflows, Durable Objects, Queues                                                                   | `apps/*/wrangler.jsonc`                                              |
+| **D1 + Drizzle** — `createDb(env.DB)`; in-memory `freshDb()` for tests that replays real migrations and enforces D1 limits                                                         | `packages/db`                                                        |
+| **User accounts** — better-auth, per-request on D1; email/password, **Google** (shown only when configured), **passkeys**; `/login`                                                | `apps/web/lib/auth.ts`                                               |
+| **Auth hardening** — required email verification, forgot/reset password, active-session list with sign-out, D1-backed rate limits, optional **Turnstile** on sign-up/sign-in/reset | `apps/web/lib/auth.ts`, `app/(site)/*-password`, `settings/security` |
+| **007** — workflow authoring console at `/workflows`, durable runs in the workflows Worker, its own D1 (`WF_DB`)                                                                   | `packages/007` (submodule), `packages/wf-host`                       |
+| **MCP** — app MCP at `/api/mcp` (`whoami`), 007 MCP at `/api/wf/mcp[/write]`; OAuth 2.1 via better-auth `mcp()` with dynamic client registration and a consent screen              | `apps/web/lib/app-mcp.ts`, `lib/wf-mcp.ts`                           |
+| **React Email** — templates + render to `{subject, html, text}`, sent through the Cloudflare `EMAIL` binding (logged in dev)                                                       | `packages/email`, `apps/web/lib/email.ts`                            |
+| **Legal pages** — `/privacy` and `/terms` templates with a "Draft" banner until finalised                                                                                          | `apps/web/lib/legal`                                                 |
 
 ## Quick start
 
@@ -104,7 +105,7 @@ Worker. Required repo secrets: `CLOUDFLARE_API_TOKEN` (D1:Edit + Workers
 Scripts:Edit), `CLOUDFLARE_ACCOUNT_ID`, `APP_URL`.
 
 Worker secrets (`wrangler secret put …` in each app):
-`BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_SECRET`, `OPENROUTER_API_KEY`,
+`BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_SECRET`, `TURNSTILE_SECRET_KEY`, `OPENROUTER_API_KEY`,
 `WF_CONNECTOR_KEY` (same value on both Workers), `TOKEN_SIGNING_KEY` (workflows).
 
 ## Decisions for you
@@ -114,9 +115,11 @@ Everything below is a `TODO` in code. Nothing here was decided for you.
 - **Cloudflare:** Worker names, D1 database names + ids (×3 wrangler files),
   custom domain, account id, production `vars`.
 - **Auth:** open sign-up? email/password on? may Google create accounts?
-  account linking, email verification / OTP / magic link, reset-link
-  lifetime, which routes require sign-in (`proxy.ts`). A reset-password page
-  and "forgot password" link are not built yet.
+  account linking, OTP / magic link, reset- and verification-link lifetimes,
+  rate-limit budget, which routes require sign-in (`proxy.ts`). Email
+  verification is **required** for email/password sign-ups
+  (`requireEmailVerification`). Turnstile is on only when
+  `TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY` are set.
 - **Email:** sending domain/sender (`EMAIL_FROM` + `allowed_sender_addresses`),
   brand colours, footer, template copy, whether to send the welcome email.
 - **Legal:** every `[TODO]` in `/privacy` and `/terms` — have counsel review.

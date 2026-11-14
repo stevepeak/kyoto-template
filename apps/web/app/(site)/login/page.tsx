@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 
-import { isGoogleEnabled } from '@/lib/auth'
+import { isGoogleEnabled, turnstileSiteKey } from '@/lib/auth'
 
 import { LoginRedirect } from './login-redirect'
 
 export const metadata: Metadata = { title: 'Sign in' }
 
-// Reads bindings (Google config) per request.
+// Reads bindings (Google, Turnstile config) per request.
 export const dynamic = 'force-dynamic'
 
 export default function LoginPage() {
@@ -16,7 +16,10 @@ export default function LoginPage() {
       {/* useSearchParams needs a Suspense boundary to avoid opting the page
           out of prerendering. */}
       <Suspense>
-        <LoginRedirect googleEnabled={isGoogleEnabled()} />
+        <LoginRedirect
+          googleEnabled={isGoogleEnabled()}
+          turnstileSiteKey={turnstileSiteKey()}
+        />
       </Suspense>
     </main>
   )

@@ -25,6 +25,7 @@ declare global {
     // Vars
     APP_URL?: string
     GOOGLE_CLIENT_ID?: string
+    TURNSTILE_SITE_KEY?: string
     EMAIL_FROM?: string
     EMAIL_FROM_NAME?: string
     POSTHOG_HOST?: string
@@ -32,6 +33,7 @@ declare global {
     // Secrets (`wrangler secret put …`)
     BETTER_AUTH_SECRET?: string
     GOOGLE_CLIENT_SECRET?: string
+    TURNSTILE_SECRET_KEY?: string
     OPENROUTER_API_KEY?: string
     WF_CONNECTOR_KEY?: string
     POSTHOG_API_KEY?: string

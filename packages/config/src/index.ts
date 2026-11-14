@@ -48,6 +48,18 @@ const envSchema = z.object({
     'Google Cloud console → the OAuth client → client secret',
   ),
 
+  // Cloudflare Turnstile — bot check on sign-up, sign-in and password reset.
+  // Both optional; the widget (and the server-side check) is left out when
+  // either is missing. The secret is a SECRET:
+  // `wrangler secret put TURNSTILE_SECRET_KEY`.
+  // TODO: create a Turnstile widget for the production hostname.
+  TURNSTILE_SITE_KEY: optionalNonEmpty().describe(
+    'Cloudflare dashboard → Turnstile → widget → site key (public)',
+  ),
+  TURNSTILE_SECRET_KEY: optionalNonEmpty().describe(
+    'Cloudflare dashboard → Turnstile → widget → secret key',
+  ),
+
   // Outbound email (Cloudflare Email Sending `EMAIL` binding). The sender must
   // also be listed in `send_email[].allowed_sender_addresses` in wrangler.jsonc.
   // TODO: choose the sending domain/address and display name.

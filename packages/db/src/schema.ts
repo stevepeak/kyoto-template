@@ -1,4 +1,4 @@
-// Auth schema (Better Auth core + passkey)
+// Auth schema (Better Auth core + passkey + rate limits)
 export * from './auth-schema'
 // OAuth 2.1 authorization server (Better Auth `mcp()` + `jwt()` plugins)
 export * from './oauth-schema'

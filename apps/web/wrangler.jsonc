@@ -48,12 +48,13 @@
   ],
 
   // Vars (non-secret). Secrets: `wrangler secret put BETTER_AUTH_SECRET`,
-  // `GOOGLE_CLIENT_SECRET`, `OPENROUTER_API_KEY`, `WF_CONNECTOR_KEY`,
-  // `POSTHOG_API_KEY`.
+  // `GOOGLE_CLIENT_SECRET`, `TURNSTILE_SECRET_KEY`, `OPENROUTER_API_KEY`,
+  // `WF_CONNECTOR_KEY`, `POSTHOG_API_KEY`.
   // TODO: fill in production values.
   "vars": {
     "APP_URL": "",
     "GOOGLE_CLIENT_ID": "",
+    "TURNSTILE_SITE_KEY": "",
     "EMAIL_FROM": "",
     "EMAIL_FROM_NAME": "",
     "POSTHOG_HOST": "https://us.i.posthog.com",

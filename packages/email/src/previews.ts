@@ -2,10 +2,12 @@ import {
   renderPasskeyAddedEmail,
   type RenderedEmail,
   renderPasswordResetEmail,
+  renderVerifyEmail,
   renderWelcomeEmail,
 } from './render'
 import PasskeyAddedEmail from './templates/passkey-added'
 import PasswordResetEmail from './templates/password-reset'
+import VerifyEmail from './templates/verify-email'
 import WelcomeEmail from './templates/welcome'
 
 /**
@@ -51,6 +53,7 @@ export interface EmailPreview {
 const welcome = WelcomeEmail.PreviewProps
 const reset = PasswordResetEmail.PreviewProps
 const passkey = PasskeyAddedEmail.PreviewProps
+const verify = VerifyEmail.PreviewProps
 
 export const EMAIL_PREVIEWS: EmailPreview[] = [
   {
@@ -75,6 +78,27 @@ export const EMAIL_PREVIEWS: EmailPreview[] = [
     ],
   },
   {
+    id: 'verify-email',
+    name: 'Verify email',
+    description:
+      'Carries the one-time link that confirms the address and signs the new account in.',
+    sentWhen:
+      'Someone signs up with email/password, or tries to sign in before confirming.',
+    variants: [
+      {
+        id: 'default',
+        label: 'Verification link',
+        description: 'A sample token — the real one is a live credential.',
+        render: (appUrl) => {
+          return renderVerifyEmail({
+            ...verify,
+            verifyUrl: `${appUrl}/api/auth/verify-email?token=sample-token&callbackURL=/verify-email`,
+          })
+        },
+      },
+    ],
+  },
+  {
     id: 'password-reset',
     name: 'Password reset',
     description:
@@ -88,7 +112,7 @@ export const EMAIL_PREVIEWS: EmailPreview[] = [
         render: (appUrl) => {
           return renderPasswordResetEmail({
             ...reset,
-            resetUrl: `${appUrl}/reset-password/sample-token`,
+            resetUrl: `${appUrl}/api/auth/reset-password/sample-token?callbackURL=/reset-password`,
           })
         },
       },

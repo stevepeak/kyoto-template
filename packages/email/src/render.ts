@@ -9,6 +9,10 @@ import PasswordResetEmail, {
   type PasswordResetEmailProps,
   passwordResetSubject,
 } from './templates/password-reset'
+import VerifyEmail, {
+  type VerifyEmailProps,
+  verifyEmailSubject,
+} from './templates/verify-email'
 import WelcomeEmail, {
   type WelcomeEmailProps,
   welcomeSubject,
@@ -59,4 +63,15 @@ export async function renderPasskeyAddedEmail(
 ): Promise<RenderedEmail> {
   const html = await render(createElement(PasskeyAddedEmail, props))
   return { subject: passkeyAddedSubject(), html, text: asPlainText(html) }
+}
+
+/**
+ * Renders the email-verification mail. `props.verifyUrl` signs the account in
+ * — the caller must never log it alongside a failure.
+ */
+export async function renderVerifyEmail(
+  props: VerifyEmailProps,
+): Promise<RenderedEmail> {
+  const html = await render(createElement(VerifyEmail, props))
+  return { subject: verifyEmailSubject(), html, text: asPlainText(html) }
 }

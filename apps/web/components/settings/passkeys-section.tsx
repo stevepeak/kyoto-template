@@ -4,6 +4,7 @@ import { Fingerprint, KeyRound, Loader2, Plus, Trash2 } from 'lucide-react'
 import { type FormEvent, useCallback, useEffect, useState } from 'react'
 
 import { authClient } from '@/lib/auth-client'
+import { browserFromUserAgent, platformFromUserAgent } from '@/lib/user-agent'
 
 import { FieldMessage, SectionCard } from './section-card'
 import {
@@ -39,23 +40,8 @@ function inferDeviceName(): string {
     )
     browser = known?.brand ?? ''
   }
-  if (!browser) {
-    if (/Edg\//.test(ua)) browser = 'Edge'
-    else if (/OPR\//.test(ua)) browser = 'Opera'
-    else if (/Firefox\//.test(ua)) browser = 'Firefox'
-    else if (/Chrome\//.test(ua)) browser = 'Chrome'
-    else if (/Safari\//.test(ua)) browser = 'Safari'
-  }
-
-  let platform = uaData?.platform ?? ''
-  if (!platform) {
-    if (/iPhone/.test(ua)) platform = 'iPhone'
-    else if (/iPad/.test(ua)) platform = 'iPad'
-    else if (/Android/.test(ua)) platform = 'Android'
-    else if (/Mac/.test(ua)) platform = 'macOS'
-    else if (/Win/.test(ua)) platform = 'Windows'
-    else if (/Linux/.test(ua)) platform = 'Linux'
-  }
+  browser ||= browserFromUserAgent(ua)
+  const platform = uaData?.platform || platformFromUserAgent(ua)
 
   if (browser && platform) return `${browser} on ${platform}`
   return browser || platform || 'Passkey'

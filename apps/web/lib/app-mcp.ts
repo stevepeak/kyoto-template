@@ -274,18 +274,7 @@ export async function handleAppMcpRequest(req: Request): Promise<Response> {
       })
       await server.connect(transport)
       try {
-        // TEMP DEBUG — remove
-        const __res = await transport.handleRequest(request)
-        try {
-          const fs = await import('node:fs')
-          fs.appendFileSync(
-            '/private/tmp/claude-501/-Users-iopeak-Documents-git-stevepeak-kyoto-template/58ab7eef-4e11-4abf-92a7-cb5e6276f2ad/scratchpad/mcp-debug.log',
-            `${new Date().toISOString()}\n${await __res.clone().text()}\n\n`,
-          )
-        } catch (e) {
-          console.error('[mcp debug]', e)
-        }
-        return __res
+        return await transport.handleRequest(request)
       } finally {
         await transport.close()
       }

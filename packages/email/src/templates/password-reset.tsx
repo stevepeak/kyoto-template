@@ -45,6 +45,7 @@ export default function PasswordResetEmail({
 
 /** What `email dev` renders the template with. Ships in the bundle — sample data only. */
 PasswordResetEmail.PreviewProps = {
-  resetUrl: 'https://app.example.com/reset-password/sample-token',
+  resetUrl:
+    'https://app.example.com/api/auth/reset-password/sample-token?callbackURL=/reset-password',
   expiresInMinutes: 60,
 } satisfies PasswordResetEmailProps

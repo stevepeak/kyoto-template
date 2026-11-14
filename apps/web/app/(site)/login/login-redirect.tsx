@@ -6,15 +6,19 @@ import { useEffect } from 'react'
 
 import { authClient } from '@/lib/auth-client'
 import { PRIVACY_HREF, TERMS_HREF } from '@/lib/legal/links'
+import { safeRedirect } from '@/lib/safe-redirect'
 
 import { AuthCard } from '../../components/auth-card'
 
-/** Only same-origin paths — never bounce to an attacker-supplied URL. */
-function safeRedirect(value: string | null): string {
-  return value?.startsWith('/') && !value.startsWith('//') ? value : '/'
+interface LoginRedirectProps {
+  googleEnabled: boolean
+  turnstileSiteKey: string | null
 }
 
-export function LoginRedirect({ googleEnabled }: { googleEnabled: boolean }) {
+export function LoginRedirect({
+  googleEnabled,
+  turnstileSiteKey,
+}: LoginRedirectProps) {
   const router = useRouter()
   const params = useSearchParams()
   const redirectTo = safeRedirect(params.get('redirectTo'))
@@ -26,7 +30,11 @@ export function LoginRedirect({ googleEnabled }: { googleEnabled: boolean }) {
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <AuthCard googleEnabled={googleEnabled} callbackURL={redirectTo} />
+      <AuthCard
+        googleEnabled={googleEnabled}
+        callbackURL={redirectTo}
+        turnstileSiteKey={turnstileSiteKey}
+      />
       <p className="max-w-sm text-center text-xs text-gray-500">
         By continuing you agree to the{' '}
         <Link href={TERMS_HREF} className="underline hover:text-gray-900">

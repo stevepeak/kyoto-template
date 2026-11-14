@@ -99,3 +99,23 @@ export const passkey = sqliteTable(
   },
   (t) => [index('passkey_user_id_idx').on(t.userId)],
 )
+
+/**
+ * Better Auth's rate-limit counters (`rateLimit.storage: 'database'`). Lives in
+ * D1 because the default in-memory store is per isolate — on Workers every
+ * isolate would get its own budget, so the limit would barely apply.
+ */
+export const rateLimit = sqliteTable(
+  'rate_limit',
+  {
+    id: text('id').primaryKey(),
+    // "<ip>|<path>" — one row per client per rate-limited endpoint.
+    key: text('key').notNull().unique(),
+    count: integer('count').notNull(),
+    // Epoch milliseconds, not a timestamp column: Better Auth compares it
+    // numerically against `Date.now()`.
+    lastRequest: integer('last_request').notNull(),
+  },
+  // Expired rows are pruned with `last_request < cutoff`.
+  (t) => [index('rate_limit_last_request_idx').on(t.lastRequest)],
+)

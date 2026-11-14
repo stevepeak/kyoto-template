@@ -1,10 +1,17 @@
 'use client'
 
 import { Fingerprint } from 'lucide-react'
-import { type FormEvent, useState } from 'react'
+import Link from 'next/link'
+import { type FormEvent, useRef, useState } from 'react'
 
 import { authClient } from '@/lib/auth-client'
 import { DEMO_USER } from '@/lib/demo-user'
+
+import {
+  captchaFetchOptions,
+  Turnstile,
+  type TurnstileHandle,
+} from './turnstile'
 
 // Inlined by Next at build time, so the demo button is stripped from prod.
 const IS_DEV = process.env.NODE_ENV === 'development'
@@ -14,13 +21,21 @@ type AuthMode = 'signin' | 'signup'
 interface AuthCardProps {
   /** Show "Continue with Google" — only when the provider is configured. */
   googleEnabled?: boolean
-  /** Where to land after an OAuth round-trip. */
+  /** Where to land after an OAuth round-trip or email confirmation. */
   callbackURL?: string
+  /** Turnstile site key — the bot check runs only when set. */
+  turnstileSiteKey?: string | null
+}
+
+/** Where the confirmation link lands; it then continues to `redirectTo`. */
+function verifyEmailCallback(redirectTo: string): string {
+  return `/verify-email?redirectTo=${encodeURIComponent(redirectTo)}`
 }
 
 export function AuthCard({
   googleEnabled = false,
   callbackURL = '/',
+  turnstileSiteKey = null,
 }: AuthCardProps) {
   const [mode, setMode] = useState<AuthMode>('signin')
   const [email, setEmail] = useState('')
@@ -29,6 +44,9 @@ export function AuthCard({
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const turnstileRef = useRef<TurnstileHandle>(null)
+  const awaitingCaptcha = Boolean(turnstileSiteKey) && !captchaToken
 
   const { data: session, isPending } = authClient.useSession()
 
@@ -43,11 +61,15 @@ export function AuthCard({
         email,
         password,
         name,
+        callbackURL: verifyEmailCallback(callbackURL),
+        ...captchaFetchOptions(captchaToken),
       })
       if (error) {
         setError(error.message || 'Failed to sign up')
       } else {
-        setSuccess('Account created successfully!')
+        setSuccess(
+          `Almost done — we sent a confirmation link to ${email}. Open it to finish signing up.`,
+        )
         setEmail('')
         setPassword('')
         setName('')
@@ -56,12 +78,21 @@ export function AuthCard({
       const { error } = await authClient.signIn.email({
         email,
         password,
+        callbackURL: verifyEmailCallback(callbackURL),
+        ...captchaFetchOptions(captchaToken),
       })
-      if (error) {
+      if (error?.code === 'EMAIL_NOT_VERIFIED') {
+        // The server has just sent a fresh link (`sendOnSignIn`).
+        setError(
+          `Confirm your email first — we sent a new link to ${email}. Check your inbox.`,
+        )
+      } else if (error) {
         setError(error.message || 'Failed to sign in')
       }
     }
 
+    // Tokens are single-use, whatever the outcome.
+    turnstileRef.current?.reset()
     setIsLoading(false)
   }
 
@@ -256,6 +287,23 @@ export function AuthCard({
           />
         </div>
 
+        {mode === 'signin' && (
+          <Link
+            href="/forgot-password"
+            className="-mt-2 self-end text-sm font-medium text-blue-600 hover:text-blue-500"
+          >
+            Forgot password?
+          </Link>
+        )}
+
+        {turnstileSiteKey && (
+          <Turnstile
+            ref={turnstileRef}
+            siteKey={turnstileSiteKey}
+            onToken={setCaptchaToken}
+          />
+        )}
+
         {error && (
           <p className="rounded-md bg-red-50 p-2 text-sm text-red-600">
             {error}
@@ -270,7 +318,7 @@ export function AuthCard({
 
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isLoading || awaitingCaptcha}
           className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-gray-400"
         >
           {isLoading ? 'Loading...' : mode === 'signin' ? 'Sign In' : 'Sign Up'}
