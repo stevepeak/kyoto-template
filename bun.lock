@@ -72,6 +72,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@app/agents": "workspace:*",
+        "@app/db": "workspace:*",
         "@app/wf-host": "workspace:*",
         "@app/workflows-client": "workspace:*",
         "@openrouter/ai-sdk-provider": "catalog:",
@@ -292,6 +293,7 @@
       "name": "@app/wf-host",
       "version": "0.0.0",
       "dependencies": {
+        "@app/workflows-client": "workspace:*",
         "@openrouter/ai-sdk-provider": "catalog:",
         "@stevepeak/007": "workspace:*",
         "ai": "catalog:",

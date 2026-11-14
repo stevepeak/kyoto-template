@@ -2,7 +2,13 @@ import { defineWfConfig } from '@stevepeak/007'
 
 import { buildRunDeps, type HostDeps } from './deps'
 import type { HostEnv } from './env'
-import { getModel, listModels, listProviders } from './model'
+import {
+  fetchModelCatalog,
+  fetchProviderBudget,
+  getModel,
+  listModels,
+  listProviders,
+} from './model'
 import { toolRegistry } from './tools'
 import { triggers } from './triggers'
 
@@ -17,6 +23,8 @@ export const wfConfig = defineWfConfig<HostDeps>({
   getModel,
   listModels,
   listProviders,
+  fetchModelCatalog,
+  fetchProviderBudget,
   toolRegistry,
   triggers,
   buildRunDeps,

@@ -4,6 +4,10 @@ import type {
 } from '@stevepeak/007/engine'
 import { z } from 'zod'
 
+import type { ChatMessage, ChatTriggerInput, ChatUser } from './chat'
+
+export * from './chat'
+
 /**
  * Workflow input schemas — the single source of truth for what each workflow
  * accepts. Imported on the worker (to validate incoming payloads) and by the
@@ -82,4 +86,16 @@ export interface WorkflowsRpc {
   startGraphRun(input: StartGraphRunInput): Promise<StartGraphRunResult>
   /** 007: start (or restart) the workflow that runs an eval sweep. */
   startEvalSweep(input: { evalRunId: string }): Promise<{ started: boolean }>
+  /** Chat: a signed WebSocket URL into the room's ChatRoom DO for `user`. */
+  chatConnect(input: { roomId: string; user: ChatUser }): Promise<{
+    url: string
+  }>
+  /** Chat: fan a stored message out to everyone in the room. */
+  chatPublish(input: { roomId: string; message: ChatMessage }): Promise<void>
+  /** Chat: start the 007 `chat_message` run that writes the assistant reply. */
+  chatReply(input: {
+    roomId: string
+    actorId: string
+    trigger: ChatTriggerInput
+  }): Promise<{ workflowRunId: string }>
 }

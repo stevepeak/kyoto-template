@@ -1,4 +1,7 @@
 import type {
+  ChatMessage,
+  ChatTriggerInput,
+  ChatUser,
   StartRunResult,
   TriggeredRunOpts,
   WorkflowName,
@@ -88,5 +91,27 @@ class HttpWorkflowsClient implements WorkflowsRpc {
     evalRunId: string
   }): Promise<{ started: boolean }> {
     return await this.post('/eval-sweeps', input)
+  }
+
+  async chatConnect(input: {
+    roomId: string
+    user: ChatUser
+  }): Promise<{ url: string }> {
+    return await this.post('/chat/connect', input)
+  }
+
+  async chatPublish(input: {
+    roomId: string
+    message: ChatMessage
+  }): Promise<void> {
+    await this.post('/chat/publish', input)
+  }
+
+  async chatReply(input: {
+    roomId: string
+    actorId: string
+    trigger: ChatTriggerInput
+  }): Promise<{ workflowRunId: string }> {
+    return await this.post('/chat/reply', input)
   }
 }

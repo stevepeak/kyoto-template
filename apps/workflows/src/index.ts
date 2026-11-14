@@ -1,5 +1,12 @@
-import { type HostDeps, wfConfig } from '@app/wf-host'
+import type { HostDeps } from '@app/wf-host'
 import {
+  type ChatMessage,
+  chatMessageSchema,
+  chatRoomIdSchema,
+  type ChatTriggerInput,
+  chatTriggerInputSchema,
+  type ChatUser,
+  chatUserSchema,
   type StartRunResult,
   type TriggeredRunOpts,
   workflowInputs,
@@ -25,8 +32,14 @@ import type {
 } from '@stevepeak/007/engine'
 import { createWfDb } from '@stevepeak/007/storage'
 import { WorkerEntrypoint } from 'cloudflare:workers'
+import { z } from 'zod'
 
-import { signRunToken, verifyRunToken } from './auth'
+import { signRunToken, verifyChatToken, verifyRunToken } from './auth'
+import { chatConnect, chatPublish, chatReply, workerWfConfig } from './chat'
+import {
+  CHAT_USER_HEADER,
+  ChatRoom as ChatRoomBase,
+} from './durable-objects/chat-room'
 import { ProgressRoom as ProgressRoomBase } from './durable-objects/progress-room'
 import { createEvalSweepClient } from './eval-sweep-client'
 import { handleNotificationsBatch } from './queues/notifications'
@@ -42,7 +55,7 @@ import { NightlyCleanup as NightlyCleanupBase } from './workflows/nightly-cleanu
 // Sentry — each runs in its own invocation, so each needs its own init.
 export const GraphWorkflow = Sentry.instrumentWorkflowWithSentry(
   sentryOptions,
-  makeGraphWorkflow<HostDeps, Env>(wfConfig),
+  makeGraphWorkflow<HostDeps, Env>(workerWfConfig),
 )
 export const EvalSweepWorkflow = Sentry.instrumentWorkflowWithSentry(
   sentryOptions,
@@ -50,7 +63,14 @@ export const EvalSweepWorkflow = Sentry.instrumentWorkflowWithSentry(
 )
 export const RunRoom = Sentry.instrumentDurableObjectWithSentry(
   sentryOptions,
-  makeRunRoom<HostDeps, Env>(wfConfig),
+  makeRunRoom<HostDeps, Env>(workerWfConfig),
+)
+
+// ── Chat ─────────────────────────────────────────────────────────────────────
+// Presence, typing and live fan-out for the app chat (see src/chat.ts).
+export const ChatRoom = Sentry.instrumentDurableObjectWithSentry(
+  sentryOptions,
+  ChatRoomBase,
 )
 
 /** Start the workflow version assigned to `triggerKind`. */
@@ -175,6 +195,28 @@ class WorkflowsService extends WorkerEntrypoint<Env> implements WorkflowsRpc {
     return await startEvalSweepWorkflow(this.env, input)
   }
 
+  async chatConnect(input: {
+    roomId: string
+    user: ChatUser
+  }): Promise<{ url: string }> {
+    return await chatConnect(this.env, input)
+  }
+
+  async chatPublish(input: {
+    roomId: string
+    message: ChatMessage
+  }): Promise<void> {
+    await chatPublish(this.env, input)
+  }
+
+  async chatReply(input: {
+    roomId: string
+    actorId: string
+    trigger: ChatTriggerInput
+  }): Promise<{ workflowRunId: string }> {
+    return await chatReply(this.env, input)
+  }
+
   /**
    * Browser-facing HTTP surface — SSE stream, WebSocket, status polling,
    * and a public `POST /runs` for cases where service bindings aren't wired.
@@ -231,6 +273,45 @@ class WorkflowsService extends WorkerEntrypoint<Env> implements WorkflowsRpc {
       }
       const id = env.PROGRESS_ROOM.idFromName(runId)
       return await env.PROGRESS_ROOM.get(id).fetch(request)
+    }
+
+    // GET /chat/:roomId/ws?token=  — WebSocket into the room's ChatRoom DO.
+    // The token (minted by the web app's `chat.connect`) names the user.
+    const chatMatch = url.pathname.match(/^\/chat\/([^/]+)\/ws$/)
+    if (chatMatch) {
+      const roomId = chatMatch[1]
+      const user = await verifyChatToken({
+        token: url.searchParams.get('token') ?? '',
+        roomId,
+        secret: env.TOKEN_SIGNING_KEY,
+      })
+      if (!user) return new Response('unauthorized', { status: 401 })
+      const headers = new Headers(request.headers)
+      headers.set(CHAT_USER_HEADER, JSON.stringify(user))
+      const room = env.CHAT_ROOM.get(env.CHAT_ROOM.idFromName(roomId))
+      return await room.fetch(new Request(request, { headers }))
+    }
+
+    // POST /chat/{connect,publish,reply} — the chat half of the `next dev`
+    // HTTP fallback; same bearer gate as the 007 routes below.
+    if (request.method === 'POST' && url.pathname.startsWith('/chat/')) {
+      const secret = env.WORKFLOWS_SHARED_SECRET
+      const auth = request.headers.get('authorization') ?? ''
+      if (!secret || !safeEqual(auth, `Bearer ${secret}`)) {
+        return new Response('unauthorized', { status: 401 })
+      }
+      const body: unknown = await request.json()
+      if (url.pathname === '/chat/connect') {
+        const input = chatConnectInput.parse(body)
+        return Response.json(await chatConnect(env, input))
+      }
+      if (url.pathname === '/chat/publish') {
+        await chatPublish(env, chatPublishInput.parse(body))
+        return Response.json({ ok: true })
+      }
+      if (url.pathname === '/chat/reply') {
+        return Response.json(await chatReply(env, chatReplyInput.parse(body)))
+      }
     }
 
     // POST /graph-runs | /triggered-runs | /eval-sweeps — the 007 half of the
@@ -292,6 +373,20 @@ class WorkflowsService extends WorkerEntrypoint<Env> implements WorkflowsRpc {
     }
   }
 }
+
+const chatConnectInput = z.object({
+  roomId: chatRoomIdSchema,
+  user: chatUserSchema,
+})
+const chatPublishInput = z.object({
+  roomId: chatRoomIdSchema,
+  message: chatMessageSchema,
+})
+const chatReplyInput = z.object({
+  roomId: chatRoomIdSchema,
+  actorId: z.string(),
+  trigger: chatTriggerInputSchema,
+})
 
 // Errors in RPC calls, fetch, cron and queue handlers all reach Sentry.
 export default Sentry.withSentry(sentryOptions, WorkflowsService)

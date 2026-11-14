@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@app/agents": "workspace:*",
+    "@app/db": "workspace:*",
     "@app/wf-host": "workspace:*",
     "@app/workflows-client": "workspace:*",
     "@openrouter/ai-sdk-provider": "catalog:",

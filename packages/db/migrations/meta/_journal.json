@@ -36,6 +36,13 @@
       "when": 1794690242829,
       "tag": "0004_striped_odin",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1794690736791,
+      "tag": "0005_melodic_hobgoblin",
+      "breakpoints": true
     }
   ]
 }

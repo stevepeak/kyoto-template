@@ -2,6 +2,7 @@
 // output isn't reproducible — it reads the local .env). Add a field whenever
 // you add a binding, var or secret.
 
+import { type ChatRoom } from './src/durable-objects/chat-room'
 import { type ProgressRoom } from './src/durable-objects/progress-room'
 import type { RunRoom } from '@stevepeak/007/cloudflare/runtime'
 
@@ -19,6 +20,9 @@ declare global {
 
       // Example per-run progress DO — typed namespace so RPC methods are checked.
       PROGRESS_ROOM: DurableObjectNamespace<ProgressRoom>
+
+      // App chat — presence, typing and live fan-out per room.
+      CHAT_ROOM: DurableObjectNamespace<ChatRoom>
 
       // 007 — consumed by startGraphRun / the SDK runtime.
       GRAPH_WORKFLOW: Workflow

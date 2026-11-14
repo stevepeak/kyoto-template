@@ -49,16 +49,22 @@
   // Durable Objects — per-run progress + WebSocket fan-out.
   //   PROGRESS_ROOM  the example workflows' room (src/durable-objects)
   //   RUN_ROOM       007's room (name fixed by the SDK's binding contract)
+  //   CHAT_ROOM      the app chat: presence, typing, live messages
   "durable_objects": {
     "bindings": [
       { "name": "PROGRESS_ROOM", "class_name": "ProgressRoom" },
       { "name": "RUN_ROOM", "class_name": "RunRoom" },
+      { "name": "CHAT_ROOM", "class_name": "ChatRoom" },
     ],
   },
   "migrations": [
     {
       "tag": "v1",
       "new_sqlite_classes": ["ProgressRoom", "RunRoom"],
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": ["ChatRoom"],
     },
   ],
 
@@ -162,6 +168,7 @@
         "bindings": [
           { "name": "PROGRESS_ROOM", "class_name": "ProgressRoom" },
           { "name": "RUN_ROOM", "class_name": "RunRoom" },
+          { "name": "CHAT_ROOM", "class_name": "ChatRoom" },
         ],
       },
       "d1_databases": [

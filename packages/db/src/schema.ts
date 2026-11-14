@@ -8,6 +8,8 @@ export * from './audit-schema'
 export * from './notification-schema'
 // Stripe subscriptions (Better Auth `stripe()` plugin)
 export * from './billing-schema'
+// Live chat rooms + history (see apps/workflows ChatRoom DO)
+export * from './chat-schema'
 
 // TODO: add your app tables here (or in sibling files re-exported from here),
 // then run `bun run --cwd packages/db db:generate`.

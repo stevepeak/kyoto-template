@@ -10,6 +10,9 @@
  * No JWT lib needed — Web Crypto handles everything.
  */
 
+import { type ChatUser, chatUserSchema } from '@app/workflows-client'
+import { z } from 'zod'
+
 const ENCODER = new TextEncoder()
 const TOKEN_TTL_SECONDS = 60 * 15
 
@@ -96,4 +99,66 @@ export async function verifyRunToken(
   } catch {
     return false
   }
+}
+
+// ── Chat room tokens ─────────────────────────────────────────────────────────
+// Same format, scoped to a room + the user it admits. The web app's tRPC
+// `chat.connect` mints one (via RPC) after its own session check; the Worker
+// verifies it on the WebSocket upgrade and hands the user to the ChatRoom DO.
+
+const chatTokenPayloadSchema = z.object({
+  roomId: z.string(),
+  user: chatUserSchema,
+  exp: z.number(),
+})
+
+export async function signChatToken(args: {
+  roomId: string
+  user: ChatUser
+  secret: string
+}): Promise<string> {
+  const payload: z.infer<typeof chatTokenPayloadSchema> = {
+    roomId: args.roomId,
+    user: args.user,
+    exp: Math.floor(Date.now() / 1000) + TOKEN_TTL_SECONDS,
+  }
+  const body = base64UrlEncode(ENCODER.encode(JSON.stringify(payload)))
+  const key = await importKey(args.secret)
+  const sig = await crypto.subtle.sign('HMAC', key, ENCODER.encode(body))
+  return `${body}.${base64UrlEncode(sig)}`
+}
+
+/** The admitted user, or `null` for a bad, expired or other-room token. */
+export async function verifyChatToken(args: {
+  token: string
+  roomId: string
+  secret: string
+}): Promise<ChatUser | null> {
+  const [body, sig] = args.token.split('.')
+  if (!body || !sig) return null
+
+  const sigBytes = base64UrlDecode(sig)
+  const key = await importKey(args.secret)
+  const ok = await crypto.subtle.verify(
+    'HMAC',
+    key,
+    sigBytes.buffer.slice(
+      sigBytes.byteOffset,
+      sigBytes.byteOffset + sigBytes.byteLength,
+    ) as ArrayBuffer,
+    ENCODER.encode(body),
+  )
+  if (!ok) return null
+
+  let json: unknown
+  try {
+    json = JSON.parse(new TextDecoder().decode(base64UrlDecode(body)))
+  } catch {
+    return null
+  }
+  const payload = chatTokenPayloadSchema.safeParse(json)
+  if (!payload.success) return null
+  if (payload.data.roomId !== args.roomId) return null
+  if (payload.data.exp < Math.floor(Date.now() / 1000)) return null
+  return payload.data.user
 }

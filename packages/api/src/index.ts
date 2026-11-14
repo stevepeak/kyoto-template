@@ -1,6 +1,7 @@
 import { workflowInputs } from '@app/workflows-client'
 import { z } from 'zod'
 
+import { chatRouter } from './chat'
 import { notificationsRouter } from './notifications'
 import {
   createCallerFactory,
@@ -55,6 +56,7 @@ export const appRouter = router({
   hello: helloRouter,
   workflows: workflowsRouter,
   notifications: notificationsRouter,
+  chat: chatRouter,
 })
 
 // Export type router type signature,
