@@ -181,7 +181,7 @@ function GuideDialog({
       onClick={(e) => {
         if (e.target === e.currentTarget) ref.current?.close()
       }}
-      className="m-auto w-full max-w-lg rounded-xl border border-gray-200 bg-white p-0 shadow-xl backdrop:bg-gray-900/40"
+      className="m-auto w-full max-w-lg rounded-xl border border-gray-200 bg-white p-0 shadow-xl"
     >
       <div className="flex items-center gap-3 border-b border-gray-200 px-5 py-4">
         <guide.logo

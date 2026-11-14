@@ -181,7 +181,25 @@
   }
 }
 
+/* Frosted-glass backdrop shared by every dialog/overlay. Tune it here. */
+:root {
+  --frosted-backdrop-bg: rgb(255 255 255 / 0.25);
+  --frosted-backdrop-blur: 3px;
+}
+.dark {
+  --frosted-backdrop-bg: rgb(0 0 0 / 0.3);
+}
+@utility frosted-backdrop {
+  background-color: var(--frosted-backdrop-bg);
+  backdrop-filter: blur(var(--frosted-backdrop-blur));
+}
+
 @layer base {
+  /* Native <dialog>s get the same backdrop with no per-component class. */
+  dialog::backdrop {
+    background-color: var(--frosted-backdrop-bg);
+    backdrop-filter: blur(var(--frosted-backdrop-blur));
+  }
   * {
     @apply border-border outline-ring/50;
   }
