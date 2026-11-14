@@ -1,90 +1,33 @@
 import type { KnipConfig } from 'knip'
 
 const config: KnipConfig = {
+  // The 007 submodule is linted, typechecked and tested in its own repo.
+  ignoreWorkspaces: ['packages/007'],
   workspaces: {
     '.': {
-      entry: ['**/*.config.{js,ts}', 'turbo.json'],
-      project: ['**/*.{js,ts,tsx}'],
-      ignore: [
-        '**/node_modules/**',
-        '**/dist/**',
-        '**/.turbo/**',
-        '**/coverage/**',
-        '**/*.d.ts',
-        '**/*.config.ts',
-        '**/*.config.cjs',
-        '**/*.config.js',
-        '**/seed.sql',
-        '**/schema.sql',
-        '**/migrations/**',
-      ],
-      ignoreDependencies: [],
+      entry: ['scripts/*.ts'],
+      // Editor-tooling shim that re-exports apps/web's Tailwind config.
+      ignore: ['tailwind.config.js'],
     },
     'apps/web': {
-      entry: ['app/**/*.{ts,tsx}'],
-      ignore: [
-        '**/node_modules/**',
-        '**/dist/**',
-        '**/*.d.ts',
-        '**/.eslintrc.json',
-      ],
+      entry: ['app/**/*.{ts,tsx}', 'open-next.config.ts'],
+      project: ['**/*.{ts,tsx}'],
+      // Loaded via `@plugin` in globals.css, which knip doesn't follow.
+      ignoreDependencies: ['@tailwindcss/typography'],
     },
     'apps/workflows': {
-      entry: ['src/index.ts'],
       project: ['src/**/*.ts'],
-      ignore: [
-        '**/node_modules/**',
-        '**/dist/**',
-        '**/.wrangler/**',
-        '**/*.d.ts',
-      ],
-    },
-    'packages/workflows-client': {
-      project: ['src/**/*.ts'],
-      ignore: ['**/node_modules/**', '**/dist/**', '**/*.d.ts'],
-    },
-    'packages/api': {
-      project: ['src/**/*.ts'],
-      ignore: ['**/node_modules/**', '**/dist/**', '**/*.d.ts'],
+      // TODO: wire Sentry (instrumentWorkflowWithSentry / withSentry) or drop it.
+      ignoreDependencies: ['@sentry/cloudflare'],
     },
     'packages/db': {
-      project: ['src/**/*.ts'],
-      ignore: [
-        '**/node_modules/**',
-        '**/dist/**',
-        '**/types.gen.ts',
-        '**/*.d.ts',
-        '**/migrations/**',
-        '**/migrate.ts',
-      ],
-    },
-    'packages/utils': {
-      project: ['src/**/*.ts'],
-      ignore: ['**/node_modules/**', '**/dist/**', '**/*.d.ts'],
+      entry: ['drizzle.config.local.ts'],
     },
     'packages/email': {
-      // `src/index.ts` is picked up from package.json `main`; `email dev`
-      // previews every file under src/templates.
+      // `email dev` previews every file under src/templates.
       entry: ['src/templates/*.tsx'],
-      project: ['src/**/*.{ts,tsx}'],
-      ignore: ['**/node_modules/**', '**/.react-email/**'],
-    },
-    'packages/agents': {
-      project: ['src/**/*.ts'],
-      ignore: ['**/node_modules/**', '**/dist/**', '**/*.d.ts'],
     },
   },
-  ignore: [
-    'apps/web/components/ui/**',
-    '**/node_modules/**',
-    '**/dist/**',
-    '**/.turbo/**',
-    '**/coverage/**',
-    '**/*.d.ts',
-    '**/types.gen.ts',
-    '**/migrations/**',
-  ],
-  ignoreDependencies: [],
 }
 
 export default config

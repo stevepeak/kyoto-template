@@ -42,7 +42,10 @@ describe('app MCP', () => {
 
   test('a revoked consent no longer grants the app MCP', () => {
     expect(consentGrantsAppMcp([APP_MCP_SCOPE, 'openid'])).toBe(true)
-    expect(consentGrantsAppMcp(`openid ${APP_MCP_SCOPE}`)).toBe(true)
+    // What the plugin actually stores: a JSON string inside the json column.
+    expect(consentGrantsAppMcp(JSON.stringify(['openid', APP_MCP_SCOPE]))).toBe(
+      true,
+    )
     expect(consentGrantsAppMcp(['wf:read'])).toBe(false)
     expect(consentGrantsAppMcp(null)).toBe(false)
   })

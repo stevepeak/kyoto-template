@@ -22,7 +22,6 @@
       "version": "0.0.0",
       "dependencies": {
         "@app/api": "workspace:*",
-        "@app/config": "workspace:*",
         "@app/db": "workspace:*",
         "@app/email": "workspace:*",
         "@app/wf-host": "workspace:*",

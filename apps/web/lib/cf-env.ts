@@ -44,15 +44,3 @@ export function cfVar(name: StringBinding): string | undefined {
   const value = cfEnv()[name] ?? process.env[name]
   return value && value.length > 0 ? value : undefined
 }
-
-/**
- * Keep the worker alive until `promise` settles, without making the response
- * wait for it. Outside the Workers runtime the promise simply runs on its own.
- */
-export function cfWaitUntil(promise: Promise<unknown>): void {
-  try {
-    getCloudflareContext().ctx.waitUntil(promise)
-  } catch {
-    // No execution context to extend — the promise still runs.
-  }
-}

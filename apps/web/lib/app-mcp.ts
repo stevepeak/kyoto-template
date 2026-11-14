@@ -73,15 +73,20 @@ export function createAppMcpServer(caller: Caller): McpServer {
 }
 
 /**
- * Does a stored consent still grant the app MCP? `scopes` is a JSON column the
- * plugin writes as an array (older rows: a space-separated string).
+ * Does a stored consent still grant the app MCP? The plugin JSON-encodes the
+ * scope list before writing it into a Drizzle `json` column, so it reads back
+ * as a JSON *string* — parse it once more.
  */
-export function consentGrantsAppMcp(scopes: unknown): boolean {
-  if (Array.isArray(scopes)) return scopes.includes(APP_MCP_SCOPE)
+export function consentGrantsAppMcp(stored: unknown): boolean {
+  let scopes = stored
   if (typeof scopes === 'string') {
-    return scopes.split(' ').includes(APP_MCP_SCOPE)
+    try {
+      scopes = JSON.parse(scopes)
+    } catch {
+      return false
+    }
   }
-  return false
+  return Array.isArray(scopes) && scopes.includes(APP_MCP_SCOPE)
 }
 
 /** A JSON-RPC error body, for a verified token that may not use the MCP. */

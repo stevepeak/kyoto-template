@@ -20,9 +20,14 @@ import { cfEnv } from './cf-env'
  *   call against the locally-running workflows worker.
  */
 export function getWorkflowsClient(): WorkflowsRpc {
-  const binding = cfEnv().WORKFLOWS
-  if (binding && typeof binding.startRun === 'function') {
-    return binding
+  try {
+    const binding = cfEnv().WORKFLOWS
+    if (binding && typeof binding.startRun === 'function') {
+      return binding
+    }
+  } catch {
+    // In `next dev`, touching the service-binding stub throws when the
+    // workflows worker isn't running locally — use the HTTP fallback.
   }
 
   /* eslint-disable no-process-env */
