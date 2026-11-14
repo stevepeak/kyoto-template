@@ -1,4 +1,5 @@
 import { type DB, schema } from '@app/db'
+import { renderPasswordResetEmail } from '@app/email'
 import { mcp } from '@better-auth/mcp'
 import { passkey } from '@better-auth/passkey'
 import { betterAuth } from 'better-auth'
@@ -7,6 +8,7 @@ import { jwt, lastLoginMethod } from 'better-auth/plugins'
 
 import { cfVar } from './cf-env'
 import { getDb } from './db'
+import { sendEmail } from './email'
 import {
   APP_MCP_PATH,
   configuredAppUrl,
@@ -15,6 +17,12 @@ import {
   resourceUrl,
   WF_MCP_PATH,
 } from './mcp-resources'
+
+/**
+ * Lifetime of a password-reset link. Passed to Better Auth AND rendered into
+ * the email, so the number a reader is told is the number the server enforces.
+ */
+const RESET_PASSWORD_EXPIRES_IN_SECONDS = 60 * 60
 
 /** Google is enabled only when both halves of the OAuth client are set. */
 function googleConfig() {
@@ -50,9 +58,21 @@ export function getAuth(db: DB = getDb()) {
       cookieCache: { enabled: true, maxAge: 60 },
     },
     emailAndPassword: {
-      // TODO: decide whether email/password stays on, whether sign-up is open
-      // (`disableSignUp`), and wire `sendResetPassword` via @app/email.
+      // TODO: decide whether email/password stays on and whether sign-up is
+      // open (`disableSignUp`).
+      // TODO: email verification (`emailVerification.sendVerificationEmail`),
+      // email OTP and magic-link sign-in are available as Better Auth options
+      // — not enabled; owner decision.
       enabled: true,
+      // TODO: reset-link lifetime — Better Auth's default is 1 hour.
+      resetPasswordTokenExpiresIn: RESET_PASSWORD_EXPIRES_IN_SECONDS,
+      sendResetPassword: async ({ user, url }) => {
+        const mail = await renderPasswordResetEmail({
+          resetUrl: url,
+          expiresInMinutes: RESET_PASSWORD_EXPIRES_IN_SECONDS / 60,
+        })
+        await sendEmail({ to: user.email, ...mail })
+      },
     },
     socialProviders: {
       ...(google

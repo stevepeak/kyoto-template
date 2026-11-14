@@ -27,3 +27,4 @@ packages/db/migrations
 # git submodule — formatted by its own repo
 packages/007
 .open-next
+.react-email

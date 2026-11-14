@@ -1,0 +1,14 @@
+{
+  // React email templates: DOM lib + JSX, and deliberately NO
+  // `@cloudflare/workers-types`. The two type sets redeclare `Response`,
+  // `WebSocket` and friends incompatibly, which is why sending lives in
+  // `apps/web/lib/email.ts` instead of here.
+  "extends": "tsconfig/bun.json",
+  "compilerOptions": {
+    "lib": ["DOM", "DOM.Iterable", "ES2023"],
+    "jsx": "react-jsx",
+    "types": ["bun", "react"]
+  },
+  "include": ["src"],
+  "exclude": ["**/node_modules", "**/.*/"]
+}

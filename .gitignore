@@ -34,3 +34,4 @@ storybook-static
 
 # Claude Code agent worktrees
 .claude/worktrees
+.react-email

@@ -42,6 +42,13 @@ local_resource(
 )
 
 local_resource(
+    name='Email Preview',
+    labels=["Development"],
+    serve_cmd="bun run --cwd packages/email dev",
+    links=[ link("http://localhost:3002/", "Email Preview") ],
+)
+
+local_resource(
     name='Storybook',
     labels=["Development"],
     serve_cmd="bun run --cwd apps/web storybook",

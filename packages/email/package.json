@@ -1,0 +1,35 @@
+{
+  "name": "@app/email",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Transactional email templates (react-email) and the render step that turns one into the { subject, html, text } a Cloudflare Email Sending binding takes.",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "clean": "rm -rf node_modules dist .react-email",
+    "dev": "email dev --dir ./src/templates --port 3002",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "lint": "eslint --ignore-pattern='.react-email/' . && prettier --ignore-path='../../.prettierignore' --check .",
+    "fix": "eslint --fix --quiet --ignore-pattern='.react-email/' . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
+  },
+  "dependencies": {
+    "@react-email/components": "^1.0.12",
+    "@react-email/render": "^2.3.1",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@kyoto/eslint-config": "workspace:*",
+    "@react-email/ui": "6.11.11",
+    "@types/bun": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react-email": "6.11.11",
+    "tsconfig": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

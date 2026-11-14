@@ -62,6 +62,13 @@ const config: KnipConfig = {
       project: ['src/**/*.ts'],
       ignore: ['**/node_modules/**', '**/dist/**', '**/*.d.ts'],
     },
+    'packages/email': {
+      // `src/index.ts` is picked up from package.json `main`; `email dev`
+      // previews every file under src/templates.
+      entry: ['src/templates/*.tsx'],
+      project: ['src/**/*.{ts,tsx}'],
+      ignore: ['**/node_modules/**', '**/.react-email/**'],
+    },
     'packages/agents': {
       project: ['src/**/*.ts'],
       ignore: ['**/node_modules/**', '**/dist/**', '**/*.d.ts'],
