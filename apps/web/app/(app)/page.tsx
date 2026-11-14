@@ -4,8 +4,8 @@ import Link from 'next/link'
 
 import { authClient } from '@/lib/auth-client'
 
-import { AuthCard } from './components/auth-card'
-import { TriggerCard } from './components/trigger-card'
+import { AuthCard } from '../components/auth-card'
+import { TriggerCard } from '../components/trigger-card'
 
 export default function HomePage() {
   const { data: session, isPending } = authClient.useSession()

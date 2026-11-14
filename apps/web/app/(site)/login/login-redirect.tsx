@@ -7,7 +7,7 @@ import { useEffect } from 'react'
 import { authClient } from '@/lib/auth-client'
 import { PRIVACY_HREF, TERMS_HREF } from '@/lib/legal/links'
 
-import { AuthCard } from '../components/auth-card'
+import { AuthCard } from '../../components/auth-card'
 
 /** Only same-origin paths — never bounce to an attacker-supplied URL. */
 function safeRedirect(value: string | null): string {

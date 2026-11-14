@@ -24,7 +24,7 @@ export default function WorkflowsPage() {
     (query ? `?${query}` : '')
   return (
     <WfProvider>
-      <div className="h-screen">
+      <div className="h-full">
         <WfApp
           basePath={BASE_PATH}
           mcpPath={WF_MCP_PATH}

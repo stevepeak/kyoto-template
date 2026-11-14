@@ -3,9 +3,8 @@ import './globals.css'
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 
-import { SiteFooter } from '@/components/site-footer'
-
 import { PostHogProvider } from './providers/posthog-provider'
+import { ReactGrab } from './providers/react-grab'
 import { TRPCProvider } from './providers/trpc-provider'
 
 export const metadata: Metadata = {
@@ -28,11 +27,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>
+        <ReactGrab />
         <TRPCProvider>
-          <PostHogProvider>
-            {children}
-            <SiteFooter />
-          </PostHogProvider>
+          <PostHogProvider>{children}</PostHogProvider>
         </TRPCProvider>
       </body>
     </html>
