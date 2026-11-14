@@ -1,9 +1,17 @@
 'use client'
 
-import { Fingerprint } from 'lucide-react'
+import { Fingerprint, KeyRound, Loader2, Plus, Trash2 } from 'lucide-react'
 import { type FormEvent, useCallback, useEffect, useState } from 'react'
 
 import { authClient } from '@/lib/auth-client'
+
+import { FieldMessage, SectionCard } from './section-card'
+import {
+  inputClass,
+  labelClass,
+  primaryButtonClass,
+  secondaryButtonClass,
+} from './styles'
 
 type Passkey = {
   id: string
@@ -53,13 +61,16 @@ function inferDeviceName(): string {
   return browser || platform || 'Passkey'
 }
 
+const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })
+
 /** List, add, and remove the signed-in user's passkeys. */
-export function PasskeysCard() {
+export function PasskeysSection() {
   const [passkeys, setPasskeys] = useState<Passkey[] | null>(null)
+  const [adding, setAdding] = useState(false)
   const [passkeyName, setPasskeyName] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
 
   const refreshPasskeys = useCallback(async () => {
     const { data, error: listError } =
@@ -77,6 +88,7 @@ export function PasskeysCard() {
       if (cancelled) return
       if (error) {
         setError(error.message || 'Failed to load passkeys')
+        setPasskeys([])
         return
       }
       setPasskeys(data ?? [])
@@ -86,105 +98,154 @@ export function PasskeysCard() {
     }
   }, [])
 
+  const openAddForm = () => {
+    setError(null)
+    setPasskeyName(inferDeviceName())
+    setAdding(true)
+  }
+
   const handleAddPasskey = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
-    setSuccess(null)
-    setIsLoading(true)
+    setIsSaving(true)
     const { error } = await authClient.passkey.addPasskey({
       name: passkeyName.trim() || inferDeviceName(),
     })
     if (error) {
       setError(error.message || 'Failed to add passkey')
     } else {
-      setSuccess('Passkey added')
+      setAdding(false)
       setPasskeyName('')
       await refreshPasskeys()
     }
-    setIsLoading(false)
+    setIsSaving(false)
   }
 
   const handleDeletePasskey = async (id: string) => {
     setError(null)
-    setSuccess(null)
+    setDeletingId(id)
     const { error } = await authClient.passkey.deletePasskey({ id })
     if (error) {
       setError(error.message || 'Failed to remove passkey')
-      return
+    } else {
+      await refreshPasskeys()
     }
-    await refreshPasskeys()
+    setDeletingId(null)
   }
 
   return (
-    <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-      <h2 className="text-lg font-semibold text-gray-900">Passkeys</h2>
-      <p className="mb-4 text-sm text-gray-600">
-        Sign in with your fingerprint, face, or device lock instead of a
-        password.
-      </p>
+    <SectionCard
+      title="Passkeys"
+      description="Sign in with your fingerprint, face, or device lock instead of a password."
+      icon={Fingerprint}
+      action={
+        adding ? null : (
+          <button
+            type="button"
+            onClick={openAddForm}
+            className={secondaryButtonClass}
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Add
+          </button>
+        )
+      }
+    >
+      {adding && (
+        <form
+          onSubmit={handleAddPasskey}
+          className="mb-5 flex flex-col gap-2 rounded-lg border border-gray-200 bg-gray-50 p-4"
+        >
+          <label htmlFor="passkey-name" className={labelClass}>
+            Name this passkey
+          </label>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <input
+              id="passkey-name"
+              type="text"
+              value={passkeyName}
+              onChange={(e) => setPasskeyName(e.target.value)}
+              autoFocus
+              className={`${inputClass} sm:flex-1`}
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setAdding(false)}
+                disabled={isSaving}
+                className={secondaryButtonClass}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSaving}
+                className={primaryButtonClass}
+              >
+                {isSaving && (
+                  <Loader2
+                    className="h-4 w-4 animate-spin"
+                    aria-hidden="true"
+                  />
+                )}
+                Continue
+              </button>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500">
+            Your browser will ask you to confirm with your device.
+          </p>
+        </form>
+      )}
 
       {passkeys === null ? (
-        <p className="mb-4 text-sm text-gray-500">Loading passkeys...</p>
+        <p className="text-sm text-gray-500">Loading…</p>
       ) : passkeys.length === 0 ? (
-        <p className="mb-4 text-sm text-gray-500">No passkeys yet.</p>
+        <p className="text-sm text-gray-500">
+          No passkeys yet. Add one to sign in faster on this device.
+        </p>
       ) : (
-        <ul className="mb-4 flex flex-col gap-2">
+        <ul className="flex flex-col gap-2">
           {passkeys.map((pk) => (
             <li
               key={pk.id}
-              className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2 text-sm"
+              className="flex items-center gap-3 rounded-lg border border-gray-200 px-3 py-2.5"
             >
-              <span className="flex flex-col">
-                <span className="text-gray-800">
+              <KeyRound
+                className="h-4 w-4 shrink-0 text-gray-400"
+                aria-hidden="true"
+              />
+              <div className="flex min-w-0 flex-1 flex-col">
+                <span className="truncate text-sm font-medium text-gray-900">
                   {pk.name || 'Unnamed passkey'}
                 </span>
                 <span className="text-xs text-gray-500">
-                  Added {new Date(pk.createdAt).toLocaleDateString()}
+                  Added {dateFormat.format(new Date(pk.createdAt))}
                 </span>
-              </span>
+              </div>
               <button
                 type="button"
                 onClick={() => handleDeletePasskey(pk.id)}
-                className="text-xs font-medium text-red-600 hover:text-red-700"
+                disabled={deletingId !== null}
+                aria-label={`Remove ${pk.name || 'passkey'}`}
+                title="Remove"
+                className="rounded-md p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
               >
-                Remove
+                {deletingId === pk.id ? (
+                  <Loader2
+                    className="h-4 w-4 animate-spin"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                )}
               </button>
             </li>
           ))}
         </ul>
       )}
 
-      <form
-        onSubmit={handleAddPasskey}
-        className="flex flex-col gap-2 sm:flex-row"
-      >
-        <input
-          type="text"
-          value={passkeyName}
-          onChange={(e) => setPasskeyName(e.target.value)}
-          placeholder="Passkey name (defaults to this device)"
-          className="min-w-0 flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-        />
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="flex items-center justify-center gap-2 rounded-md border border-blue-600 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 disabled:opacity-50"
-        >
-          <Fingerprint className="h-4 w-4" aria-hidden="true" />
-          Add a passkey
-        </button>
-      </form>
-
-      {error && (
-        <p className="mt-3 rounded-md bg-red-50 p-2 text-sm text-red-600">
-          {error}
-        </p>
-      )}
-      {success && (
-        <p className="mt-3 rounded-md bg-green-50 p-2 text-sm text-green-600">
-          {success}
-        </p>
-      )}
-    </section>
+      <FieldMessage error={error} />
+    </SectionCard>
   )
 }

@@ -7,9 +7,17 @@
  * package renders, `apps/web/lib/email.ts` sends what it produced.
  */
 export {
+  EMAIL_PREVIEWS,
+  type EmailPreview,
+  type EmailPreviewVariant,
+  findEmailPreviewVariant,
+} from './previews'
+export {
   type RenderedEmail,
+  renderPasskeyAddedEmail,
   renderPasswordResetEmail,
   renderWelcomeEmail,
 } from './render'
+export { type PasskeyAddedEmailProps } from './templates/passkey-added'
 export { type PasswordResetEmailProps } from './templates/password-reset'
 export { type WelcomeEmailProps } from './templates/welcome'

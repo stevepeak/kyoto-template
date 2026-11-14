@@ -1,6 +1,10 @@
 import { plainTextSelectors, render, toPlainText } from '@react-email/render'
 import { createElement } from 'react'
 
+import PasskeyAddedEmail, {
+  type PasskeyAddedEmailProps,
+  passkeyAddedSubject,
+} from './templates/passkey-added'
 import PasswordResetEmail, {
   type PasswordResetEmailProps,
   passwordResetSubject,
@@ -48,4 +52,11 @@ export async function renderPasswordResetEmail(
 ): Promise<RenderedEmail> {
   const html = await render(createElement(PasswordResetEmail, props))
   return { subject: passwordResetSubject(), html, text: asPlainText(html) }
+}
+
+export async function renderPasskeyAddedEmail(
+  props: PasskeyAddedEmailProps,
+): Promise<RenderedEmail> {
+  const html = await render(createElement(PasskeyAddedEmail, props))
+  return { subject: passkeyAddedSubject(), html, text: asPlainText(html) }
 }

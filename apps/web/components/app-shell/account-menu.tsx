@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronsUpDown, LogOut, Settings, Workflow } from 'lucide-react'
+import { ChevronsUpDown, LogOut, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
@@ -57,11 +57,10 @@ const itemClass =
 
 interface AccountMenuProps {
   user: AccountUser
-  canUseWorkflows: boolean
 }
 
 /** The account button pinned to the bottom of the sidebar, and its popover. */
-export function AccountMenu({ user, canUseWorkflows }: AccountMenuProps) {
+export function AccountMenu({ user }: AccountMenuProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -111,21 +110,6 @@ export function AccountMenu({ user, canUseWorkflows }: AccountMenuProps) {
             <Settings className="h-4 w-4" aria-hidden="true" />
             Settings
           </Link>
-
-          {canUseWorkflows && (
-            <>
-              <div className="my-1 h-px bg-gray-200" />
-              <Link
-                href="/workflows"
-                role="menuitem"
-                onClick={() => setOpen(false)}
-                className={itemClass}
-              >
-                <Workflow className="h-4 w-4" aria-hidden="true" />
-                007 Workflows
-              </Link>
-            </>
-          )}
 
           <div className="my-1 h-px bg-gray-200" />
           <Link

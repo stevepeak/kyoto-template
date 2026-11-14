@@ -1,6 +1,12 @@
 import { describe, expect, test } from 'bun:test'
 
-import { renderPasswordResetEmail, renderWelcomeEmail } from './render'
+import { EMAIL_PREVIEWS } from './previews'
+import {
+  renderPasskeyAddedEmail,
+  renderPasswordResetEmail,
+  renderWelcomeEmail,
+} from './render'
+import PasskeyAddedEmail from './templates/passkey-added'
 import PasswordResetEmail from './templates/password-reset'
 import WelcomeEmail from './templates/welcome'
 
@@ -40,6 +46,43 @@ describe('renderPasswordResetEmail', () => {
     expect(mail.text).toContain(resetUrl)
     expect(mail.text).toContain('60 minutes')
     expect(mail.text).toContain('has not been changed')
+  })
+})
+
+describe('renderPasskeyAddedEmail', () => {
+  test('names the passkey, the time, and where to remove it', async () => {
+    const mail = await renderPasskeyAddedEmail(PasskeyAddedEmail.PreviewProps)
+
+    expect(mail.subject).toBe('A new passkey was added to your Acme Co account')
+    expect(mail.text).toContain('MacBook Pro Touch ID')
+    expect(mail.text).toContain('November 14, 2026')
+    expect(mail.text).toContain('UTC')
+    expect(mail.text).toContain('https://app.example.com/settings/security')
+  })
+
+  test('reads naturally without a passkey name', async () => {
+    const mail = await renderPasskeyAddedEmail({
+      ...PasskeyAddedEmail.PreviewProps,
+      passkeyName: '  ',
+    })
+    expect(mail.text).toContain('A new passkey was added to your Acme Co')
+  })
+})
+
+describe('EMAIL_PREVIEWS', () => {
+  test('every variant renders, and ids are unique', async () => {
+    const templateIds = EMAIL_PREVIEWS.map((p) => p.id)
+    expect(new Set(templateIds).size).toBe(templateIds.length)
+
+    for (const preview of EMAIL_PREVIEWS) {
+      const variantIds = preview.variants.map((v) => v.id)
+      expect(new Set(variantIds).size).toBe(variantIds.length)
+      for (const variant of preview.variants) {
+        const mail = await variant.render('https://app.example.com')
+        expect(mail.subject.length).toBeGreaterThan(0)
+        expect(mail.text.length).toBeGreaterThan(0)
+      }
+    }
   })
 })
 

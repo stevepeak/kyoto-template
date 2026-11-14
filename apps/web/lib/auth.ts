@@ -1,9 +1,10 @@
 import { type DB, schema } from '@app/db'
-import { renderPasswordResetEmail } from '@app/email'
+import { renderPasskeyAddedEmail, renderPasswordResetEmail } from '@app/email'
 import { mcp } from '@better-auth/mcp'
 import { passkey } from '@better-auth/passkey'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
+import { createAuthMiddleware } from 'better-auth/api'
 import { jwt, lastLoginMethod } from 'better-auth/plugins'
 
 import { cfVar } from './cf-env'
@@ -23,6 +24,40 @@ import {
  * the email, so the number a reader is told is the number the server enforces.
  */
 const RESET_PASSWORD_EXPIRES_IN_SECONDS = 60 * 60
+
+/**
+ * Tells the account owner a passkey was registered. Runs as an `after` hook
+ * rather than the plugin's `registration.afterVerification`, which fires
+ * BEFORE the passkey row is written — mailing from there would announce a
+ * passkey that a failed insert never created.
+ *
+ * Never throws: the passkey is already saved, and a mail failure must not turn
+ * a successful registration into an error the user sees.
+ */
+const notifyPasskeyAdded = createAuthMiddleware(async (ctx) => {
+  if (ctx.path !== '/passkey/verify-registration') return
+  const passkey = ctx.context.returned
+  const user = ctx.context.session?.user
+  if (
+    !user ||
+    !passkey ||
+    typeof passkey !== 'object' ||
+    !('credentialID' in passkey)
+  ) {
+    return
+  }
+  const { name, createdAt } = passkey as { name?: string; createdAt?: Date }
+  try {
+    const mail = await renderPasskeyAddedEmail({
+      passkeyName: name ?? null,
+      addedAt: createdAt ? new Date(createdAt) : new Date(),
+      settingsUrl: `${new URL(ctx.context.baseURL).origin}/settings/security`,
+    })
+    await sendEmail({ to: user.email, ...mail })
+  } catch (error) {
+    console.error('[email] passkey-added notice failed', error)
+  }
+})
 
 /** Google is enabled only when both halves of the OAuth client are set. */
 function googleConfig() {
@@ -93,6 +128,7 @@ export function getAuth(db: DB = getDb()) {
           }
         : {}),
     },
+    hooks: { after: notifyPasskeyAdded },
     account: {
       encryptOAuthTokens: true,
       // TODO: decide on account linking (e.g. Google ↔ email/password with

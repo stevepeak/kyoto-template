@@ -1,6 +1,6 @@
 'use client'
 
-import { House, type LucideIcon, Menu, X } from 'lucide-react'
+import { House, type LucideIcon, Mail, Menu, Workflow, X } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { type ReactNode, useState } from 'react'
@@ -14,7 +14,16 @@ import { AccountMenu, type AccountUser } from './account-menu'
 type NavItem = { href: string; label: string; icon: LucideIcon }
 
 // TODO: the app's primary navigation.
-const NAV_ITEMS: NavItem[] = [{ href: '/', label: 'Home', icon: House }]
+const NAV_ITEMS: NavItem[] = [
+  { href: '/', label: 'Home', icon: House },
+  { href: '/emails', label: 'Emails', icon: Mail },
+]
+
+const WORKFLOWS_NAV_ITEM: NavItem = {
+  href: '/workflows',
+  label: '007 Workflows',
+  icon: Workflow,
+}
 
 function isActive(pathname: string, href: string): boolean {
   return href === '/' ? pathname === '/' : pathname.startsWith(href)
@@ -24,7 +33,7 @@ interface AppShellProps {
   children: ReactNode
   /** The server-read session user, used until the client session resolves. */
   initialUser: AccountUser | null
-  /** Show the 007 console entry in the account menu. */
+  /** Show the 007 console entry in the sidebar nav. */
   canUseWorkflows: boolean
 }
 
@@ -57,6 +66,10 @@ export function AppShell({
     )
   }
 
+  const navItems = canUseWorkflows
+    ? [...NAV_ITEMS, WORKFLOWS_NAV_ITEM]
+    : NAV_ITEMS
+
   const sidebar = (
     <div className="flex h-full flex-col">
       <div className="flex h-14 items-center justify-between px-4">
@@ -74,7 +87,7 @@ export function AppShell({
       </div>
 
       <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-2 py-2">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+        {navItems.map(({ href, label, icon: Icon }) => {
           const active = isActive(pathname, href)
           return (
             <Link
@@ -96,7 +109,7 @@ export function AppShell({
       </nav>
 
       <div className="border-t border-gray-200 p-2">
-        <AccountMenu user={user} canUseWorkflows={canUseWorkflows} />
+        <AccountMenu user={user} />
       </div>
     </div>
   )
