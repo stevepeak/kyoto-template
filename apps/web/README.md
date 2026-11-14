@@ -1,136 +1,21 @@
-# Web2 - Next.js with Drizzle ORM & Better Auth
+# @app/web
 
-A simple Next.js application with Drizzle ORM for database management and Better Auth for GitHub OAuth authentication.
+Next.js 16 on Cloudflare Workers (OpenNext). See the [root README](../../README.md)
+for setup, scripts and deployment.
 
-## Tech Stack
-
-- **Next.js 16** - React framework with App Router
-- **Drizzle ORM** - Type-safe database ORM
-- **Better Auth** - Modern authentication with GitHub OAuth
-- **Tailwind CSS v4** - Utility-first CSS framework
-- **shadcn/ui** - Beautiful UI components
-
-## Setup
-
-### 1. Install Dependencies
-
-```bash
-bun install
-```
-
-### 2. Environment Variables
-
-Create a `.env.local` file with the following variables:
+| Path                             | What                                                                   |
+| -------------------------------- | ---------------------------------------------------------------------- |
+| `app/login`, `app/oauth/consent` | sign-in (email/password, Google, passkey) and the OAuth consent screen |
+| `app/workflows`                  | the 007 workflow console                                               |
+| `app/privacy`, `app/terms`       | legal page templates                                                   |
+| `app/api/auth`                   | better-auth (per request, on D1)                                       |
+| `app/api/trpc`                   | tRPC (`@app/api`)                                                      |
+| `app/api/mcp`                    | the app's MCP server (`whoami`)                                        |
+| `app/api/wf`                     | 007 data plane, connector callback, 007 MCP                            |
+| `lib/cf-env.ts`                  | the one place Cloudflare bindings are read                             |
+| `cloudflare-env.d.ts`            | hand-written mirror of `wrangler.jsonc` bindings                       |
 
 ```bash
-# Database (PostgreSQL)
-# Get this from Neon, Supabase, or any PostgreSQL provider
-DATABASE_URL="postgresql://user:password@host:5432/database"
-
-# App URL (for auth redirects)
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
-
-# Better Auth
-# Generate with: openssl rand -base64 32
-BETTER_AUTH_SECRET="your-secret-here"
-BETTER_AUTH_URL="http://localhost:3000"
-
-# GitHub OAuth
-# Get these from: https://github.com/settings/developers
-# Authorization callback URL: http://localhost:3000/api/auth/callback/github
-GITHUB_CLIENT_ID="your_github_client_id"
-GITHUB_CLIENT_SECRET="your_github_client_secret"
-
-# PostHog Analytics (optional)
-# Set to 'true' to enable PostHog analytics (disabled by default for local development)
-NEXT_PUBLIC_POSTHOG_ENABLED="false"
-# Get these from: https://posthog.com
-NEXT_PUBLIC_POSTHOG_KEY="your_posthog_api_key"
-NEXT_PUBLIC_POSTHOG_HOST="https://us.i.posthog.com"
+bun run dev               # next dev on :3000, with D1/email/service bindings via miniflare
+bun run deploy:cloudflare # OpenNext build + wrangler deploy
 ```
-
-### 3. GitHub OAuth Setup
-
-1. Go to https://github.com/settings/developers
-2. Click "New OAuth App"
-3. Fill in the details:
-   - **Application name**: Web2 (or your choice)
-   - **Homepage URL**: `http://localhost:3000`
-   - **Authorization callback URL**: `http://localhost:3000/api/auth/callback/github`
-4. Copy the Client ID and generate a Client Secret
-5. Add them to your `.env.local` file
-
-### 4. Database Setup
-
-```bash
-# Generate migration files
-bun drizzle-kit generate
-
-# Push schema to database
-bun drizzle-kit push
-
-# Or run migrations manually
-bun drizzle-kit migrate
-```
-
-### 5. Run Development Server
-
-```bash
-bun run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## Project Structure
-
-```
-apps/web2/
-├── app/
-│   ├── api/
-│   │   └── auth/[...all]/     # Auth API routes
-│   ├── layout.tsx              # Root layout
-│   ├── page.tsx                # Homepage
-│   └── globals.css             # Global styles
-├── components/
-│   ├── auth/
-│   │   └── user-button.tsx     # Login/user display component
-│   └── ui/                     # shadcn components
-├── lib/
-│   ├── auth.ts                 # Better Auth config
-│   ├── auth-client.ts          # Client-side auth utilities
-│   ├── db/
-│   │   ├── schema.ts           # Database schema
-│   │   └── index.ts            # Database connection
-│   └── utils.ts                # Utility functions
-└── drizzle.config.ts           # Drizzle ORM config
-```
-
-## Available Scripts
-
-- `bun run dev` - Start development server on port 3002
-- `bun run build` - Build for production
-- `bun run start` - Start production server
-- `bun run lint` - Run ESLint and Prettier checks
-- `bun run fix` - Auto-fix linting issues
-- `bun run typecheck` - Run TypeScript type checking
-
-## Features
-
-- ✅ GitHub OAuth authentication
-- ✅ Session management
-- ✅ Type-safe database with Drizzle ORM
-- ✅ Automatic database migrations
-- ✅ Beautiful UI with shadcn components
-- ✅ Responsive design with Tailwind CSS
-- ✅ PostHog analytics integration (disabled for local development)
-
-## Database Schema
-
-The app uses the following tables (managed by Better Auth):
-
-- `user` - User accounts
-- `session` - User sessions
-- `account` - OAuth account connections
-- `verification` - Email verification tokens
-
-You can extend the schema by adding more tables in `lib/db/schema.ts`.

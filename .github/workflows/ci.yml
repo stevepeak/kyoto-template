@@ -7,25 +7,44 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Every checkout needs `submodules: recursive` — packages/007 is a submodule
+# and the web/workflows apps import it.
+
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: ./.github/actions/setup
       - run: bun run lint
+      - run: bun run check:007-lockfile
 
   typecheck:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: ./.github/actions/setup
       - run: bun run typecheck
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/setup
+      - run: bun run test
 
   knip:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: ./.github/actions/setup
       - run: bun run knip
 
@@ -33,67 +52,73 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: ./.github/actions/setup
       - run: bun run build
 
+  # ── Deploy (main only) ──────────────────────────────────────────────────────
+  # TODO: set repo secrets CLOUDFLARE_API_TOKEN (D1:Edit + Workers Scripts:Edit)
+  # and CLOUDFLARE_ACCOUNT_ID, create the D1 databases, and fill the
+  # database_ids in the wrangler.jsonc files before enabling deploys.
+  #
+  # Migrations use `bunx wrangler` rather than cloudflare/wrangler-action: the
+  # action runs `npm i`, and npm cannot parse `workspace:*`.
+
   deploy-migrations:
-    name: Deploy Migrations
-    needs: [lint, typecheck, knip, build]
+    name: Deploy D1 migrations
+    needs: [lint, typecheck, test, knip, build]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: ./.github/actions/setup
-
-      - name: Install PostgreSQL client
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
-
-      - name: Run database migrations
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: bun --cwd packages/db db:migrate
+      - name: Apply app migrations (kyoto-db)
+        run: bun run --cwd packages/db db:migrate
+      - name: Apply 007 migrations (kyoto-wf)
+        run: bun run --cwd apps/workflows db:migrate:wf
 
   deploy-workers:
-    name: Deploy workers
+    name: Deploy workflows worker
     needs: [deploy-migrations]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-
-      - name: Deploy workflows worker
-        uses: cloudflare/wrangler-action@v3
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: apps/workflows
-          command: deploy --keep-vars
+          submodules: recursive
+      - uses: ./.github/actions/setup
+      - name: Deploy
+        run: bun run --cwd apps/workflows deploy --keep-vars
 
   deploy-web:
     name: Deploy web
     needs: [deploy-workers]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: ./.github/actions/setup
-
-      - name: Build for Cloudflare
+      - name: Build and deploy to Cloudflare Workers
         env:
-          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+          # Inlined into the client bundle at build time.
+          APP_URL: ${{ secrets.APP_URL }}
+          NEXT_PUBLIC_APP_URL: ${{ secrets.APP_URL }}
           NEXT_PUBLIC_POSTHOG_API_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_API_KEY }}
           NEXT_PUBLIC_POSTHOG_HOST: ${{ secrets.NEXT_PUBLIC_POSTHOG_HOST }}
           NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
           NEXT_PUBLIC_WORKFLOWS_URL: ${{ secrets.NEXT_PUBLIC_WORKFLOWS_URL }}
-        run: bun --cwd apps/web run build:cloudflare
-
-      - name: Deploy to Cloudflare Workers
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: apps/web
-          command: deploy --keep-vars
+        run: bun run --cwd apps/web deploy:cloudflare

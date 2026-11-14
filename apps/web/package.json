@@ -9,7 +9,7 @@
     "build": "bun --env-file=../../.env next build --turbo",
     "build:cloudflare": "opennextjs-cloudflare build",
     "preview:cloudflare": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "deploy:cloudflare": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "deploy:cloudflare": "opennextjs-cloudflare build && opennextjs-cloudflare deploy -- --keep-vars",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "start": "next start --port 3000",
     "lint": "eslint --ignore-pattern='.next' . && prettier --ignore-path='../../.prettierignore' --check .",

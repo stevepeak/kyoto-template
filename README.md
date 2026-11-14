@@ -1,336 +1,135 @@
 # Template Repo
 
-A modern, type-safe monorepo template for building full-stack applications with Next.js, tRPC, Drizzle ORM, and a Cloudflare-native background-job stack (Workflows + Queues + Durable Objects).
+A type-safe monorepo template that runs entirely on Cloudflare:
+Next.js (OpenNext) + tRPC + Drizzle over D1, better-auth (Google + passkeys),
+the [007](https://github.com/stevepeak/007) AI-workflow SDK, React Email, and
+two MCP servers behind OAuth.
 
-## 🚀 Quick Start
+> **This is a template.** Product, legal and infrastructure decisions are left
+> as `TODO` comments (and visible `[TODO: …]` placeholders in the legal pages).
+> Run `git grep -n TODO -- ':!packages/007'` and work through
+> [Decisions for you](#decisions-for-you) before shipping.
 
-### Prerequisites
+## What's included
 
-- **Bun** (v1.1.42+) - [Install Bun](https://bun.sh)
-- **PostgreSQL Database** - Use [Neon](https://neon.tech), [Supabase](https://supabase.com), or any PostgreSQL provider
-- **Cloudflare Account** - [Sign up](https://dash.cloudflare.com/sign-up) — Workers Paid plan is required for Workflows + Durable Objects
-- **Sentry Account** - [Sign up](https://sentry.io) for error tracking
-- **PostHog Account** - [Sign up](https://posthog.com) for analytics (optional)
+| Feature                                                                                                                                                               | Where                                          |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| **Cloudflare everything** — two Workers (web + workflows), D1, Email Sending, Workflows, Durable Objects, Queues                                                      | `apps/*/wrangler.jsonc`                        |
+| **D1 + Drizzle** — `createDb(env.DB)`; in-memory `freshDb()` for tests that replays real migrations and enforces D1 limits                                            | `packages/db`                                  |
+| **User accounts** — better-auth, per-request on D1; email/password, **Google** (shown only when configured), **passkeys**; `/login`                                   | `apps/web/lib/auth.ts`                         |
+| **007** — workflow authoring console at `/workflows`, durable runs in the workflows Worker, its own D1 (`WF_DB`)                                                      | `packages/007` (submodule), `packages/wf-host` |
+| **MCP** — app MCP at `/api/mcp` (`whoami`), 007 MCP at `/api/wf/mcp[/write]`; OAuth 2.1 via better-auth `mcp()` with dynamic client registration and a consent screen | `apps/web/lib/app-mcp.ts`, `lib/wf-mcp.ts`     |
+| **React Email** — templates + render to `{subject, html, text}`, sent through the Cloudflare `EMAIL` binding (logged in dev)                                          | `packages/email`, `apps/web/lib/email.ts`      |
+| **Legal pages** — `/privacy` and `/terms` templates with a "Draft" banner until finalised                                                                             | `apps/web/lib/legal`                           |
 
-### Using This Template
+## Quick start
 
-1. **Create a new repository from this template:**
-
-   ```bash
-   # Use GitHub's "Use this template" button, or:
-   gh repo create my-app --template stevepeak/kyoto-template
-   ```
-
-2. **Clone your new repository:**
-
-   ```bash
-   git clone <your-repo-url>
-   cd my-app
-   ```
-
-3. **Install dependencies:**
-
-   ```bash
-   bun install
-   ```
-
-4. **Set up environment variables:**
-   Create a `.env` file in the root directory:
-
-   ```bash
-   # App Configuration
-   APP_URL="http://localhost:3000"
-
-   # Database (PostgreSQL)
-   DATABASE_URL="postgresql://user:password@host:5432/database"
-
-   # Better Auth
-   BETTER_AUTH_SECRET="your-secret-here"  # Generate with: openssl rand -base64 32
-
-   # Cloudflare Workflows worker (replaces Trigger.dev)
-   TOKEN_SIGNING_KEY="..."          # Generate with: openssl rand -base64 32
-   WORKFLOWS_URL="http://localhost:8787"
-   NEXT_PUBLIC_WORKFLOWS_URL="http://localhost:8787"
-
-   # AI — routed through OpenRouter
-   OPENROUTER_API_KEY="sk-or-v1-xxxxx"
-
-   # Sentry (Error Tracking)
-   SENTRY_DSN="https://xxxxx@sentry.io/xxxxx"
-
-   # PostHog (Analytics - optional)
-   POSTHOG_API_KEY="ph_xxxxx"
-   POSTHOG_HOST="https://us.i.posthog.com"
-   ```
-
-5. **Set up the database:**
-
-   ```bash
-   # Generate migration files from schema
-   bun --cwd packages/db db:generate
-
-   # Apply migrations to database
-   bun --cwd packages/db db:migrate
-
-   # Or push schema directly (for development)
-   bun --cwd packages/db db:push
-   ```
-
-6. **Start development servers:**
-
-   ```bash
-   # Start all apps (web + workflows worker)
-   bun run dev
-
-   # Or start just the web app
-   bun run dev:web
-   ```
-
-   - Web app: http://localhost:3000
-   - Workflows worker: http://localhost:8787 (Wrangler dev with local
-     Workflows / Queues / Durable Object simulation, persisted to
-     `.wrangler/state`)
-
-## 📦 Project Structure
-
-```
-kyoto-template/
-├── apps/
-│   ├── web/              # Next.js 16 web application
-│   │   ├── app/          # App Router pages and routes
-│   │   └── ...
-│   └── workflows/        # Cloudflare Workflows / Queues / DOs worker
-│       └── src/
-│           ├── workflows/        # WorkflowEntrypoint classes
-│           ├── durable-objects/  # Per-run progress / WebSocket fan-out
-│           └── queues/           # Queue consumers
-│
-├── packages/
-│   ├── api/              # tRPC API definitions
-│   │   └── src/
-│   │       ├── index.ts  # Main router export
-│   │       └── trpc.ts   # tRPC setup
-│   │
-│   ├── db/               # Drizzle ORM database package
-│   │   ├── src/
-│   │   │   ├── schema.ts # Database schema definitions
-│   │   │   └── migrate.ts # Migration runner
-│   │   └── migrations/   # Generated migration files
-│   │
-│   ├── config/           # Environment variable validation
-│   │   └── src/index.ts  # Zod-validated config
-│   │
-│   ├── agents/           # AI agent tooling and MCP integration
-│   ├── utils/            # Shared utilities
-│   └── posthog/          # PostHog analytics helpers
-│
-└── config/               # Shared configuration
-    ├── eslint/           # ESLint config
-    └── tsconfig/         # TypeScript configs
-```
-
-## 🛠 Available Scripts
-
-### Root Level
-
-- `bun run dev` - Start all development servers
-- `bun run dev:web` - Start only the web app
-- `bun run build` - Build all packages and apps
-- `bun run typecheck` - Type check all packages
-- `bun run lint` - Lint all packages
-- `bun run fix` - Auto-fix linting issues
-- `bun run ci` - Run CI checks (typecheck + lint + knip + build)
-- `bun run clean` - Clean all build artifacts
-
-### Database (`packages/db`)
-
-- `bun --cwd packages/db db:generate` - Generate migration files
-- `bun --cwd packages/db db:migrate` - Run migrations
-- `bun --cwd packages/db db:push` - Push schema directly (dev only)
-- `bun --cwd packages/db db:studio` - Open Drizzle Studio
-
-### Workflows worker (`apps/workflows`)
-
-- `bun --cwd apps/workflows dev` - Start Wrangler dev with Workflows / Queues / DOs
-- `bun --cwd apps/workflows dev:scheduled` - Same, plus the `/__scheduled` endpoint for manual cron firing
-- `bun --cwd apps/workflows deploy` - Deploy the worker (Workflows + DOs + Queues + Cron triggers)
-- `bun --cwd apps/workflows tail` - Stream production logs
-
-Trigger a cron run locally:
+Prerequisites: [Bun](https://bun.sh) 1.4+, a Cloudflare account (Workers Paid
+for Workflows + Durable Objects).
 
 ```bash
-curl 'http://localhost:8787/__scheduled?cron=0+3+*+*+*'
+git clone --recurse-submodules <your-repo-url>   # or: git submodule update --init --recursive
+bun install
+cp .env.example .env              # fill BETTER_AUTH_SECRET at minimum
+cp .wf-migrate.env.example .wf-migrate.env
+bun run db:migrate:local          # app D1 + 007's D1, in ./.wrangler/state
 ```
 
-## 🏗 Tech Stack
-
-### Core
-
-- **[Bun](https://bun.sh)** - Fast JavaScript runtime and package manager
-- **[Turborepo](https://turbo.build)** - High-performance monorepo build system
-- **[TypeScript](https://www.typescriptlang.org)** - Type-safe JavaScript
-
-### Frontend
-
-- **[Next.js 16](https://nextjs.org)** - React framework with App Router
-- **[React 19](https://react.dev)** - UI library
-- **[Tailwind CSS v4](https://tailwindcss.com)** - Utility-first CSS
-- **[tRPC](https://trpc.io)** - End-to-end typesafe APIs
-
-### Backend
-
-- **[Drizzle ORM](https://orm.drizzle.team)** - Type-safe SQL ORM
-- **[PostgreSQL](https://www.postgresql.org)** - Database
-- **[Cloudflare Workflows](https://developers.cloudflare.com/workflows/)** - Durable, resumable async tasks (replaces Trigger.dev)
-- **[Cloudflare Queues](https://developers.cloudflare.com/queues/)** - Batched fire-and-forget jobs with retries + DLQ
-- **[Cloudflare Durable Objects](https://developers.cloudflare.com/durable-objects/)** - Per-run progress fan-out via WebSocket / SSE
-- **[Zod](https://zod.dev)** - Schema validation
-
-### Infrastructure
-
-- **[Sentry](https://sentry.io)** - Error tracking and monitoring
-- **[PostHog](https://posthog.com)** - Product analytics
-- **[Vercel](https://vercel.com)** - Deployment (configured in `vercel.json`)
-
-## 📚 Key Packages
-
-### `@app/config`
-
-Centralized environment variable parsing and validation with Zod. Provides type-safe access to all environment variables across the monorepo.
-
-```typescript
-import { getConfig } from '@app/config'
-const { APP_URL, DATABASE_URL } = getConfig()
-```
-
-### `@app/api`
-
-Server-side tRPC API definitions. Contains all API routers and procedures with end-to-end type safety.
-
-### `@app/db`
-
-Drizzle ORM database package. Contains schema definitions, migrations, and database connection logic.
-
-```typescript
-import { db } from '@app/db'
-import { schema } from '@app/db/schema'
-```
-
-### `@app/agents`
-
-AI agent tooling and MCP (Model Context Protocol) integration for orchestrating specialized agents.
-
-### `@app/utils`
-
-Shared JavaScript utilities and helper functions.
-
-## 🔧 Development Guidelines
-
-### Type-Driven Development
-
-Adjust types and schemas first before implementing logic. Run typecheck after changes:
+Then start the apps (or `tilt up`):
 
 ```bash
-bun run typecheck
+bun run --cwd apps/workflows dev  # :8787
+bun run --cwd apps/web dev        # :3000
+bun run --cwd packages/email dev  # :3002 email previews
 ```
 
-### Named Arguments
+`next dev` gets real bindings (D1, service binding, email) through
+`initOpenNextCloudflareForDev`, persisting to the same `.wrangler/state` as the
+workflows worker and the migrations.
 
-Use named arguments instead of inline arguments:
+### Connecting an MCP client
 
-```typescript
-// ✅ Good
-function greet(args: { name: string }) {}
-
-// ❌ Avoid
-function greet(name: string) {}
-```
-
-### Database Migrations
-
-- **NEVER** edit files in `packages/db/migrations`
-- **ONLY** edit `packages/db/src/schema.ts` to make schema changes
-- Use `db:generate` to create migrations and `db:migrate` to apply them
-
-### Code Quality
-
-- Uses ESLint and Prettier for code formatting
-- Uses Knip for detecting unused code
-- Pre-commit hooks with Husky and lint-staged
-
-## 🚢 Deployment
-
-### Vercel
-
-The project is configured for Vercel deployment. Set all environment variables in the Vercel dashboard.
-
-### Workflows worker
-
-Deploy the workflows Worker (Workflows + Durable Objects + Queues + Cron triggers in one shot):
+`.mcp.json` registers the **007** MCP for this repo
+(`http://localhost:3000/api/wf/mcp/write`). The first call opens a browser to
+sign in and approve. The app MCP is at `/api/mcp`:
 
 ```bash
-bun --cwd apps/workflows deploy
+claude mcp add --transport http app http://localhost:3000/api/mcp
 ```
 
-Set runtime secrets once:
+## Scripts
 
-```bash
-bunx wrangler --cwd apps/workflows secret put TOKEN_SIGNING_KEY
-bunx wrangler --cwd apps/workflows secret put OPENROUTER_API_KEY
-bunx wrangler --cwd apps/workflows secret put SENTRY_DSN
+| Command                                     | What it does                                                |
+| ------------------------------------------- | ----------------------------------------------------------- |
+| `bun run ci`                                | typecheck → lint → test → 007 lockfile check → knip → build |
+| `bun run fix`                               | eslint --fix + prettier across workspaces                   |
+| `bun run db:migrate:local` / `db:migrate`   | apply app + 007 D1 migrations locally / remotely            |
+| `bun run --cwd packages/db db:generate`     | generate a migration from `src/schema.ts`                   |
+| `bun run --cwd packages/db db:studio:local` | Drizzle Studio on the local D1                              |
+| `bun-update --all`                          | update every workspace's dependencies (see note below)      |
+
+The 007 submodule is linted/typechecked/tested in its own repo, so turbo tasks
+filter it out (`--filter=!@stevepeak/007`). `check:007-lockfile` fails when its
+standalone `bun.lock` drifts — fix with `bun run --cwd packages/007 lock`.
+
+**Pinned:** `@cloudflare/workers-types` is held at `5.20261112.1`;
+`5.20261114.1` breaks `DurableObjectNamespace<RunRoom>` assignability against 007. `typescript` is aliased to `@typescript/typescript6` (TS 7 has no JS API,
+which Next, typescript-eslint and scripts need); TS 7 is available as
+`@typescript/native`.
+
+## Layout
+
+```
+apps/
+  web/          Next.js on OpenNext — UI, tRPC, auth, /api/wf, MCP routes
+  workflows/    Workers entrypoint — 007 GraphWorkflow/EvalSweepWorkflow/RunRoom,
+                example Workflows, queues, crons
+packages/
+  007/          @stevepeak/007 (git submodule)
+  wf-host/      007 host config: model provider, tools, triggers, run identity
+  api/          tRPC routers (ctx: db, user, workflows; protectedProcedure)
+  db/           Drizzle schema + D1 client + test harness + migrations
+  email/        React Email templates + render
+  config/       zod-validated env
+  workflows-client/  RPC contract between the two Workers
+  agents/ posthog/ utils/
+config/         shared eslint (react/server presets) + tsconfig
 ```
 
-### GitHub Actions Secrets
+## Deployment
 
-The CI workflow (`.github/workflows/ci.yml`) runs database migrations and deploys to Cloudflare on every push to `main`. Add the following secrets at **GitHub → Settings → Secrets and variables → Actions → New repository secret**:
+CI (`.github/workflows/ci.yml`) runs every check on PRs; on `main` it applies
+D1 migrations, deploys the workflows Worker, then builds and deploys the web
+Worker. Required repo secrets: `CLOUDFLARE_API_TOKEN` (D1:Edit + Workers
+Scripts:Edit), `CLOUDFLARE_ACCOUNT_ID`, `APP_URL`.
 
-| Secret                        | Used by             | Where to find it                                                                                                                                                                                                                                           |
-| ----------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`                | `deploy-migrations` | Your PostgreSQL provider's dashboard. For [Neon](https://neon.tech), open the project → **Connection Details** → copy the pooled connection string. For [Supabase](https://supabase.com), open **Project Settings → Database → Connection string (URI)**.  |
-| `CLOUDFLARE_API_TOKEN`        | `deploy-cloudflare` | [Cloudflare dashboard → My Profile → API Tokens](https://dash.cloudflare.com/profile/api-tokens) → **Create Token** → use the **Edit Cloudflare Workers** template (or a custom token with `Account: Workers Scripts: Edit` + `User: User Details: Read`). |
-| `CLOUDFLARE_ACCOUNT_ID`       | `deploy-cloudflare` | [Cloudflare dashboard](https://dash.cloudflare.com) → select your account → **Workers & Pages** → the Account ID is shown in the right sidebar (or in the URL: `dash.cloudflare.com/<account-id>`).                                                        |
-| `NEXT_PUBLIC_APP_URL`         | `deploy-cloudflare` | Public URL of the deployed app (e.g. `https://kyoto-web.example.workers.dev`). Inlined into the client bundle at build time.                                                                                                                               |
-| `NEXT_PUBLIC_POSTHOG_API_KEY` | `deploy-cloudflare` | [PostHog](https://posthog.com) → **Project Settings → Project API Key**. Inlined into the client bundle at build time so the browser SDK can initialize.                                                                                                   |
-| `NEXT_PUBLIC_POSTHOG_HOST`    | `deploy-cloudflare` | `https://us.i.posthog.com` (US cloud) or `https://eu.i.posthog.com` (EU). Inlined at build time.                                                                                                                                                           |
-| `NEXT_PUBLIC_SENTRY_DSN`      | `deploy-cloudflare` | [Sentry](https://sentry.io) → **Project Settings → Client Keys (DSN)**. Inlined at build time.                                                                                                                                                             |
+Worker secrets (`wrangler secret put …` in each app):
+`BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_SECRET`, `OPENROUTER_API_KEY`,
+`WF_CONNECTOR_KEY` (same value on both Workers), `TOKEN_SIGNING_KEY` (workflows).
 
-You can also add them via the GitHub CLI:
+## Decisions for you
 
-```bash
-gh secret set DATABASE_URL
-gh secret set CLOUDFLARE_API_TOKEN
-gh secret set CLOUDFLARE_ACCOUNT_ID
-gh secret set NEXT_PUBLIC_APP_URL
-gh secret set NEXT_PUBLIC_POSTHOG_API_KEY
-gh secret set NEXT_PUBLIC_POSTHOG_HOST
-gh secret set NEXT_PUBLIC_SENTRY_DSN
-```
+Everything below is a `TODO` in code. Nothing here was decided for you.
 
-### Cloudflare Worker runtime secrets
+- **Cloudflare:** Worker names, D1 database names + ids (×3 wrangler files),
+  custom domain, account id, production `vars`.
+- **Auth:** open sign-up? email/password on? may Google create accounts?
+  account linking, email verification / OTP / magic link, reset-link
+  lifetime, which routes require sign-in (`proxy.ts`). A reset-password page
+  and "forgot password" link are not built yet.
+- **Email:** sending domain/sender (`EMAIL_FROM` + `allowed_sender_addresses`),
+  brand colours, footer, template copy, whether to send the welcome email.
+- **Legal:** every `[TODO]` in `/privacy` and `/terms` — have counsel review.
+- **007:** who may use `/workflows` (`lib/wf-access.ts`; currently a
+  `WF_ADMIN_EMAILS` allowlist, open to any signed-in user only in dev),
+  models/provider, tools, triggers, run-scope identity, telemetry; whether to
+  keep the hand-written example Workflows now that 007 exists.
+- **MCP:** app scope name + consent copy, server instructions, the app's tools.
+- **Brand:** product name (`apps/web/lib/brand.ts`, `packages/email/src/brand.ts`).
+- **Observability:** whether Sentry / PostHog are required, and wiring Sentry
+  into the workflows Worker.
+- **Strictness:** `noUncheckedIndexedAccess` in `config/tsconfig/bun.json`.
 
-Server-side secrets (the ones without a `NEXT_PUBLIC_` prefix — `POSTHOG_API_KEY`, `SENTRY_DSN`, `OPENROUTER_API_KEY`, `BETTER_AUTH_SECRET`, etc.) are read by the Worker at runtime, not inlined at build. Set them once with Wrangler from `apps/web`:
+## License
 
-```bash
-bunx wrangler secret put POSTHOG_API_KEY
-bunx wrangler secret put POSTHOG_HOST
-bunx wrangler secret put SENTRY_DSN
-bunx wrangler secret put BETTER_AUTH_SECRET
-bunx wrangler secret put DATABASE_URL
-# ...repeat for any other required secret in packages/config/src/index.ts
-```
-
-The CI deploy uses `wrangler deploy --keep-vars` so these secrets persist across deployments.
-
-## 📖 Learn More
-
-- [Next.js Documentation](https://nextjs.org/docs)
-- [tRPC Documentation](https://trpc.io/docs)
-- [Drizzle ORM Documentation](https://orm.drizzle.team/docs/overview)
-- [Cloudflare Workflows Documentation](https://developers.cloudflare.com/workflows/)
-- [Cloudflare Queues Documentation](https://developers.cloudflare.com/queues/)
-- [Cloudflare Durable Objects Documentation](https://developers.cloudflare.com/durable-objects/)
-- [Turborepo Documentation](https://turbo.build/repo/docs)
-
-## 📄 License
-
-See [LICENSE](LICENSE) file for details.
+MIT — see [LICENSE](LICENSE).
