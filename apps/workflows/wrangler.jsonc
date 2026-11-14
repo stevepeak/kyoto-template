@@ -7,6 +7,8 @@
   "observability": {
     "enabled": true,
   },
+  // The deployed version's id — Sentry tags events with it as the release.
+  "version_metadata": { "binding": "CF_VERSION_METADATA" },
 
   // Workflows — one binding per WorkflowEntrypoint class.
   // Add a new entry whenever you add a workflow in src/workflows/.
@@ -112,5 +114,98 @@
   // Browser uses PUBLIC_BASE_URL to subscribe to SSE/WS endpoints directly.
   "vars": {
     "PUBLIC_BASE_URL": "http://localhost:8787",
+  },
+
+  // ── Staging: backs PR preview deploys of the web Worker ───────────────────
+  // Deployed from CI on each PR (last one wins — previews share it). Workflow
+  // and queue names are account-wide, hence the `-staging` suffixes.
+  // Bindings below are NOT inherited from the top level, so they're repeated.
+  // TODO: create the staging resources (`/setup preview`) and paste the ids.
+  "env": {
+    "staging": {
+      "name": "template-workflows-staging",
+      "workers_dev": true,
+      "version_metadata": { "binding": "CF_VERSION_METADATA" },
+      "workflows": [
+        {
+          "name": "hello-world-staging",
+          "binding": "HELLO_WORLD",
+          "class_name": "HelloWorld",
+        },
+        {
+          "name": "example-agent-staging",
+          "binding": "EXAMPLE_AGENT",
+          "class_name": "ExampleAgent",
+        },
+        {
+          "name": "drip-email-staging",
+          "binding": "DRIP_EMAIL",
+          "class_name": "DripEmail",
+        },
+        {
+          "name": "nightly-cleanup-staging",
+          "binding": "NIGHTLY_CLEANUP",
+          "class_name": "NightlyCleanup",
+        },
+        {
+          "name": "graph-workflow-staging",
+          "binding": "GRAPH_WORKFLOW",
+          "class_name": "GraphWorkflow",
+        },
+        {
+          "name": "eval-sweep-workflow-staging",
+          "binding": "EVAL_SWEEP_WORKFLOW",
+          "class_name": "EvalSweepWorkflow",
+        },
+      ],
+      "durable_objects": {
+        "bindings": [
+          { "name": "PROGRESS_ROOM", "class_name": "ProgressRoom" },
+          { "name": "RUN_ROOM", "class_name": "RunRoom" },
+        ],
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "template-db-staging",
+          "database_id": "00000000-0000-0000-0000-000000000002",
+        },
+        {
+          "binding": "WF_DB",
+          "database_name": "template-wf-staging",
+          "database_id": "00000000-0000-0000-0000-000000000003",
+          "migrations_dir": "../../packages/007/migrations",
+        },
+      ],
+      "send_email": [
+        {
+          "name": "EMAIL",
+          "allowed_sender_addresses": ["noreply@example.com"],
+        },
+      ],
+      "queues": {
+        "producers": [
+          {
+            "queue": "template-notifications-staging",
+            "binding": "NOTIFICATIONS",
+          },
+        ],
+        "consumers": [
+          {
+            "queue": "template-notifications-staging",
+            "max_batch_size": 25,
+            "max_batch_timeout": 5,
+            "max_retries": 3,
+            "dead_letter_queue": "template-notifications-staging-dlq",
+          },
+        ],
+      },
+      // No nightly cron on staging.
+      "triggers": { "crons": [] },
+      "vars": {
+        // TODO: https://template-workflows-staging.<subdomain>.workers.dev
+        "PUBLIC_BASE_URL": "",
+      },
+    },
   },
 }

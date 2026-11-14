@@ -1,5 +1,6 @@
 'use client'
 
+import * as Sentry from '@sentry/nextjs'
 import { useEffect } from 'react'
 
 export default function Error({
@@ -10,8 +11,7 @@ export default function Error({
   reset: () => void
 }) {
   useEffect(() => {
-    // Log to error tracking service in production
-    // eslint-disable-next-line no-console
+    Sentry.captureException(error)
     console.error(error)
   }, [error])
 

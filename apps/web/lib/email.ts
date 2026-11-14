@@ -10,6 +10,8 @@ type OutboundEmail = {
   html: string
   text: string
   replyTo?: string
+  /** Extra MIME headers, e.g. `List-Unsubscribe` (see notification-email.ts). */
+  headers?: Record<string, string>
 }
 
 /**
@@ -33,7 +35,12 @@ type SendOutcome = 'sent' | 'no-binding'
 export async function sendEmail(email: OutboundEmail): Promise<SendOutcome> {
   const from = cfVar('EMAIL_FROM')
   const fromName = cfVar('EMAIL_FROM_NAME') ?? PRODUCT_NAME
-  assertNoHeaderBreaks([email.to, email.subject, email.replyTo ?? ''])
+  assertNoHeaderBreaks([
+    email.to,
+    email.subject,
+    email.replyTo ?? '',
+    ...Object.entries(email.headers ?? {}).flat(),
+  ])
 
   const binding = cfEnv().EMAIL
   if (!binding || !from) {
@@ -54,6 +61,7 @@ export async function sendEmail(email: OutboundEmail): Promise<SendOutcome> {
     html: email.html,
     text: email.text,
     ...(email.replyTo ? { replyTo: email.replyTo } : {}),
+    ...(email.headers ? { headers: email.headers } : {}),
   })
   return 'sent'
 }

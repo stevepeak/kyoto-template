@@ -1,6 +1,13 @@
 'use client'
 
-import { Bell, type LucideIcon, Plug, Shield, UserCircle } from 'lucide-react'
+import {
+  Bell,
+  KeySquare,
+  type LucideIcon,
+  Plug,
+  Shield,
+  UserCircle,
+} from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -12,19 +19,20 @@ type SettingsGroup = { label: string; tabs: SettingsTab[] }
 
 // Add a group (e.g. "Organization") when the app grows things that belong to
 // something other than the signed-in person.
-const GROUPS: SettingsGroup[] = [
+export const SETTINGS_GROUPS: SettingsGroup[] = [
   {
     label: 'Account',
     tabs: [
       { href: '/settings', label: 'Profile', icon: UserCircle },
       { href: '/settings/notifications', label: 'Notifications', icon: Bell },
       { href: '/settings/security', label: 'Security', icon: Shield },
+      { href: '/settings/api-keys', label: 'API keys', icon: KeySquare },
       { href: '/settings/mcp', label: 'MCP', icon: Plug },
     ],
   },
 ]
 
-const ALL_HREFS = GROUPS.flatMap((g) => g.tabs.map((t) => t.href))
+const ALL_HREFS = SETTINGS_GROUPS.flatMap((g) => g.tabs.map((t) => t.href))
 
 /** The most specific matching tab wins — `/settings` prefixes every tab. */
 function activeHref(pathname: string): string | null {
@@ -51,7 +59,7 @@ export function SettingsNav({ initialImage }: SettingsNavProps) {
       aria-label="Settings sections"
       className="flex flex-col gap-6 md:w-52 md:shrink-0"
     >
-      {GROUPS.map((group) => (
+      {SETTINGS_GROUPS.map((group) => (
         <div key={group.label} className="flex flex-col gap-1">
           <h2 className="px-3 text-[0.6875rem] font-semibold tracking-wider text-gray-500 uppercase">
             {group.label}

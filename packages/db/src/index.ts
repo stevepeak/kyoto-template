@@ -7,6 +7,7 @@ import * as schema from './schema'
 
 // Export schema and all its contents
 export { schema }
+export type { AuditEventDetail, AuditEventType } from './audit-schema'
 
 export { D1_LIMITS } from './d1-limits'
 

@@ -16,4 +16,17 @@
       "migrations_dir": "./migrations",
     },
   ],
+  "env": {
+    // PR preview deploys' database — see apps/web/wrangler.jsonc `env.staging`.
+    "staging": {
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "template-db-staging",
+          "database_id": "00000000-0000-0000-0000-000000000002",
+          "migrations_dir": "./migrations",
+        },
+      ],
+    },
+  },
 }

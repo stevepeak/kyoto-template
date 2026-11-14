@@ -75,6 +75,19 @@ export const EMAIL_PREVIEWS: EmailPreview[] = [
           'The account has no display name, so the greeting addresses nobody.',
         render: (appUrl) => renderWelcomeEmail({ name: null, appUrl }),
       },
+      {
+        id: 'unsubscribe',
+        label: 'With unsubscribe link',
+        description:
+          'Sent as optional onboarding mail, so the footer carries an unsubscribe link.',
+        render: (appUrl) => {
+          return renderWelcomeEmail({
+            ...welcome,
+            appUrl,
+            unsubscribeUrl: `${appUrl}/unsubscribe?token=sample-token`,
+          })
+        },
+      },
     ],
   },
   {

@@ -1,4 +1,4 @@
-import { desc, eq, schema } from '@app/db'
+import { and, desc, eq, schema } from '@app/db'
 
 import type { McpAuditEntry } from '@/components/settings/mcp-audit-section'
 
@@ -13,28 +13,39 @@ export async function listMcpToolCalls(
 ): Promise<McpAuditEntry[]> {
   const rows = await getDb()
     .select({
-      id: schema.mcpToolCall.id,
-      tool: schema.mcpToolCall.tool,
-      intent: schema.mcpToolCall.intent,
-      arguments: schema.mcpToolCall.arguments,
-      ok: schema.mcpToolCall.ok,
-      error: schema.mcpToolCall.error,
-      durationMs: schema.mcpToolCall.durationMs,
-      createdAt: schema.mcpToolCall.createdAt,
-      clientId: schema.mcpToolCall.clientId,
+      id: schema.auditEvent.id,
+      tool: schema.auditEvent.tool,
+      intent: schema.auditEvent.intent,
+      arguments: schema.auditEvent.arguments,
+      ok: schema.auditEvent.ok,
+      error: schema.auditEvent.error,
+      durationMs: schema.auditEvent.durationMs,
+      createdAt: schema.auditEvent.createdAt,
+      clientId: schema.auditEvent.clientId,
       // Left join: the trail outlives a deleted client.
       clientName: schema.oauthClient.name,
     })
-    .from(schema.mcpToolCall)
+    .from(schema.auditEvent)
     .leftJoin(
       schema.oauthClient,
-      eq(schema.oauthClient.clientId, schema.mcpToolCall.clientId),
+      eq(schema.oauthClient.clientId, schema.auditEvent.clientId),
     )
-    .where(eq(schema.mcpToolCall.userId, userId))
-    .orderBy(desc(schema.mcpToolCall.createdAt))
+    .where(
+      and(
+        eq(schema.auditEvent.userId, userId),
+        eq(schema.auditEvent.type, 'mcp_tool_call'),
+      ),
+    )
+    .orderBy(desc(schema.auditEvent.createdAt))
     .limit(AUDIT_LIMIT)
+  // The MCP columns are nullable only because other event types share the
+  // table; every `mcp_tool_call` row sets them.
   return rows.map((row) => ({
     ...row,
+    tool: row.tool ?? '',
+    intent: row.intent ?? '',
+    clientId: row.clientId ?? '',
+    durationMs: row.durationMs ?? 0,
     createdAt: row.createdAt.toISOString(),
   }))
 }

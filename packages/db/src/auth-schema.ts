@@ -14,6 +14,12 @@ export const user = sqliteTable('user', {
   image: text('image'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+  // Admin plugin. `role` is 'admin' only for allowlisted admins — synced by
+  // the web app's auth hook, never set by hand.
+  role: text('role'),
+  banned: integer('banned', { mode: 'boolean' }).default(false),
+  banReason: text('ban_reason'),
+  banExpires: integer('ban_expires', { mode: 'timestamp' }),
 })
 
 export const session = sqliteTable(
@@ -29,6 +35,8 @@ export const session = sqliteTable(
     userId: text('user_id')
       .notNull()
       .references(() => user.id),
+    // Admin plugin: the admin's user id when this session is an impersonation.
+    impersonatedBy: text('impersonated_by'),
   },
   (t) => [index('session_user_id_idx').on(t.userId)],
 )
@@ -118,4 +126,47 @@ export const rateLimit = sqliteTable(
   },
   // Expired rows are pruned with `last_request < cutoff`.
   (t) => [index('rate_limit_last_request_idx').on(t.lastRequest)],
+)
+
+/**
+ * Personal API keys (`@better-auth/api-key`). Only a hash of the key is stored;
+ * `start` keeps the first few characters so a person can tell keys apart.
+ * `referenceId` is the owning user's id.
+ */
+export const apikey = sqliteTable(
+  'apikey',
+  {
+    id: text('id').primaryKey(),
+    configId: text('config_id').notNull().default('default'),
+    name: text('name'),
+    start: text('start'),
+    referenceId: text('reference_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    prefix: text('prefix'),
+    key: text('key').notNull(),
+    refillInterval: integer('refill_interval'),
+    refillAmount: integer('refill_amount'),
+    lastRefillAt: integer('last_refill_at', { mode: 'timestamp' }),
+    enabled: integer('enabled', { mode: 'boolean' }).default(true),
+    rateLimitEnabled: integer('rate_limit_enabled', {
+      mode: 'boolean',
+    }).default(true),
+    rateLimitTimeWindow: integer('rate_limit_time_window'),
+    rateLimitMax: integer('rate_limit_max'),
+    requestCount: integer('request_count').default(0),
+    remaining: integer('remaining'),
+    lastRequest: integer('last_request', { mode: 'timestamp' }),
+    expiresAt: integer('expires_at', { mode: 'timestamp' }),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+    permissions: text('permissions'),
+    metadata: text('metadata'),
+  },
+  (t) => [
+    // Every authenticated request looks its key up by hash.
+    index('apikey_key_idx').on(t.key),
+    index('apikey_reference_id_idx').on(t.referenceId),
+    index('apikey_config_id_idx').on(t.configId),
+  ],
 )

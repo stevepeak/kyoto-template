@@ -10,15 +10,21 @@ const config: KnipConfig = {
       ignore: ['tailwind.config.js'],
     },
     'apps/web': {
-      entry: ['app/**/*.{ts,tsx}', 'open-next.config.ts', 'scripts/*.ts'],
+      entry: [
+        'app/**/*.{ts,tsx}',
+        // Typed PostHog flags for server code — template API, no caller yet.
+        'lib/server-feature-flags.ts',
+        'open-next.config.ts',
+        'scripts/*.ts',
+        // Product-email sender: no caller until the first optional email.
+        'lib/notification-email.ts',
+      ],
       project: ['**/*.{ts,tsx}'],
       // Loaded via `@plugin` in globals.css, which knip doesn't follow.
       ignoreDependencies: ['@tailwindcss/typography'],
     },
     'apps/workflows': {
       project: ['src/**/*.ts'],
-      // TODO: wire Sentry (instrumentWorkflowWithSentry / withSentry) or drop it.
-      ignoreDependencies: ['@sentry/cloudflare'],
     },
     'packages/db': {
       entry: ['drizzle.config.local.ts'],

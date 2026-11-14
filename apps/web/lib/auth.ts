@@ -1,16 +1,22 @@
-import { type DB, schema } from '@app/db'
+import { and, type DB, eq, isNull, ne, or, schema } from '@app/db'
 import {
   renderPasskeyAddedEmail,
   renderPasswordResetEmail,
   renderVerifyEmail,
 } from '@app/email'
+import { apiKey } from '@better-auth/api-key'
 import { mcp } from '@better-auth/mcp'
 import { passkey } from '@better-auth/passkey'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { createAuthMiddleware } from 'better-auth/api'
-import { captcha, jwt, lastLoginMethod } from 'better-auth/plugins'
+import {
+  APIError,
+  createAuthMiddleware,
+  getSessionFromCtx,
+} from 'better-auth/api'
+import { admin, captcha, jwt, lastLoginMethod } from 'better-auth/plugins'
 
+import { recordAuditEvent, requestOrigin } from './audit'
 import { cfVar } from './cf-env'
 import { getDb } from './db'
 import { sendEmail } from './email'
@@ -22,6 +28,7 @@ import {
   resourceUrl,
   WF_MCP_PATH,
 } from './mcp-resources'
+import { canUseWorkflows } from './wf-access'
 
 /**
  * Lifetime of a password-reset link. Passed to Better Auth AND rendered into
@@ -33,38 +40,146 @@ const RESET_PASSWORD_EXPIRES_IN_SECONDS = 60 * 60
 const VERIFY_EMAIL_EXPIRES_IN_SECONDS = 60 * 60
 
 /**
- * Tells the account owner a passkey was registered. Runs as an `after` hook
- * rather than the plugin's `registration.afterVerification`, which fires
- * BEFORE the passkey row is written — mailing from there would announce a
- * passkey that a failed insert never created.
+ * Tells the account owner a passkey was registered, and logs it. Runs as an
+ * `after` hook rather than the plugin's `registration.afterVerification`,
+ * which fires BEFORE the passkey row is written — mailing from there would
+ * announce a passkey that a failed insert never created.
  *
  * Never throws: the passkey is already saved, and a mail failure must not turn
  * a successful registration into an error the user sees.
  */
-const notifyPasskeyAdded = createAuthMiddleware(async (ctx) => {
-  if (ctx.path !== '/passkey/verify-registration') return
-  const passkey = ctx.context.returned
-  const user = ctx.context.session?.user
-  if (
-    !user ||
-    !passkey ||
-    typeof passkey !== 'object' ||
-    !('credentialID' in passkey)
-  ) {
-    return
-  }
-  const { name, createdAt } = passkey as { name?: string; createdAt?: Date }
+async function onPasskeyAdded(args: {
+  db: DB
+  user: { id: string; email: string }
+  passkey: { name?: string; createdAt?: Date }
+  baseURL: string
+  request: Request | undefined
+}): Promise<void> {
+  const { name, createdAt } = args.passkey
+  await recordAuditEvent({
+    db: args.db,
+    userId: args.user.id,
+    type: 'passkey_added',
+    ...requestOrigin(args.request),
+    detail: { name: name ?? null },
+  })
   try {
     const mail = await renderPasskeyAddedEmail({
       passkeyName: name ?? null,
       addedAt: createdAt ? new Date(createdAt) : new Date(),
-      settingsUrl: `${new URL(ctx.context.baseURL).origin}/settings/security`,
+      settingsUrl: `${new URL(args.baseURL).origin}/settings/security`,
     })
-    await sendEmail({ to: user.email, ...mail })
+    await sendEmail({ to: args.user.email, ...mail })
   } catch (error) {
     console.error('[email] passkey-added notice failed', error)
   }
-})
+}
+
+/**
+ * After a successful auth endpoint: security notices and the account audit
+ * trail. `returned` is the endpoint's response body — or an APIError, which
+ * none of these shapes match.
+ */
+function afterAuthHook(db: DB) {
+  return createAuthMiddleware(async (ctx) => {
+    const returned: unknown = ctx.context.returned
+    const user = ctx.context.session?.user
+    if (!returned || typeof returned !== 'object') return
+    const origin = requestOrigin(ctx.request)
+
+    switch (ctx.path) {
+      case '/passkey/verify-registration': {
+        if (!user || !('credentialID' in returned)) return
+        await onPasskeyAdded({
+          db,
+          user,
+          passkey: returned as { name?: string; createdAt?: Date },
+          baseURL: ctx.context.baseURL,
+          request: ctx.request,
+        })
+        return
+      }
+      case '/change-password': {
+        // The response names the user: with `revokeOtherSessions` the
+        // session in context is the one that was just replaced.
+        if (!('user' in returned)) return
+        const { id } = returned.user as { id: string }
+        await recordAuditEvent({
+          db,
+          userId: id,
+          type: 'password_changed',
+          ...origin,
+        })
+        return
+      }
+      case '/api-key/create': {
+        if (!user || !('key' in returned)) return
+        const { name } = returned as { name?: string | null }
+        await recordAuditEvent({
+          db,
+          userId: user.id,
+          type: 'api_key_created',
+          ...origin,
+          detail: { name: name ?? null },
+        })
+        return
+      }
+      case '/api-key/delete': {
+        if (!user || !('success' in returned) || !returned.success) return
+        await recordAuditEvent({
+          db,
+          userId: user.id,
+          type: 'api_key_deleted',
+          ...origin,
+        })
+        return
+      }
+    }
+  })
+}
+
+/**
+ * The admin panel uses the same allowlist as /setup and the 007 console
+ * (`canUseWorkflows`), not a role someone could set by hand. The admin plugin
+ * checks `user.role`, so an allowlisted caller's role is promoted here before
+ * the endpoint runs (its own session read skips the cookie cache, so it sees
+ * the write). Dropping someone from the allowlist cuts them off on their next
+ * request, whatever their stored role says.
+ *
+ * `stop-impersonating` is exempt: during impersonation the session belongs to
+ * the impersonated user, who isn't on the allowlist.
+ */
+function requireAllowlistedAdmin(db: DB) {
+  return createAuthMiddleware(async (ctx) => {
+    if (!ctx.path.startsWith('/admin/')) return
+    if (ctx.path === '/admin/stop-impersonating') return
+    const session = await getSessionFromCtx(ctx)
+    if (!session || !canUseWorkflows(session.user.email)) {
+      throw new APIError('FORBIDDEN', { message: 'Admins only' })
+    }
+    await db
+      .update(schema.user)
+      .set({ role: 'admin' })
+      .where(
+        and(
+          eq(schema.user.id, session.user.id),
+          or(isNull(schema.user.role), ne(schema.user.role, 'admin')),
+        ),
+      )
+  })
+}
+
+/** How a session was created, by the endpoint that created it. */
+function signInMethod(ctx: {
+  path?: string
+  params?: Record<string, string | undefined>
+}): string | null {
+  if (ctx.path === '/sign-in/email') return 'password'
+  if (ctx.path === '/passkey/verify-authentication') return 'passkey'
+  if (ctx.path === '/verify-email') return 'email link'
+  if (ctx.path?.startsWith('/callback/')) return ctx.params?.id ?? null
+  return null
+}
 
 /** Google is enabled only when both halves of the OAuth client are set. */
 function googleConfig() {
@@ -165,6 +280,14 @@ export function getAuth(db: DB = getDb()) {
       resetPasswordTokenExpiresIn: RESET_PASSWORD_EXPIRES_IN_SECONDS,
       // Whoever forced the reset may already be signed in elsewhere.
       revokeSessionsOnPasswordReset: true,
+      onPasswordReset: async ({ user }, request) => {
+        await recordAuditEvent({
+          db,
+          userId: user.id,
+          type: 'password_reset',
+          ...requestOrigin(request),
+        })
+      },
       sendResetPassword: async ({ user, url }) => {
         const mail = await renderPasswordResetEmail({
           resetUrl: url,
@@ -186,7 +309,36 @@ export function getAuth(db: DB = getDb()) {
           }
         : {}),
     },
-    hooks: { after: notifyPasskeyAdded },
+    hooks: {
+      before: requireAllowlistedAdmin(db),
+      after: afterAuthHook(db),
+    },
+    databaseHooks: {
+      session: {
+        create: {
+          // Every new session is a sign-in, whatever the method — except the
+          // replacement `/change-password` mints, already logged as such.
+          after: async (session, ctx) => {
+            if (ctx?.path === '/change-password') return
+            const impersonatedBy =
+              'impersonatedBy' in session &&
+              typeof session.impersonatedBy === 'string'
+                ? session.impersonatedBy
+                : null
+            await recordAuditEvent({
+              db,
+              userId: session.userId,
+              type: impersonatedBy ? 'impersonated' : 'sign_in',
+              ipAddress: session.ipAddress,
+              userAgent: session.userAgent,
+              detail: impersonatedBy
+                ? { impersonatedBy }
+                : { method: ctx ? signInMethod(ctx) : null },
+            })
+          },
+        },
+      },
+    },
     account: {
       encryptOAuthTokens: true,
       // TODO: decide on account linking (e.g. Google ↔ email/password with
@@ -194,6 +346,17 @@ export function getAuth(db: DB = getDb()) {
     },
     plugins: [
       passkey(),
+      // Ban and impersonate, for allowlisted admins only — see
+      // `requireAllowlistedAdmin`. Banning revokes the user's sessions and
+      // blocks new sign-ins.
+      admin(),
+      // Personal API keys. Only the hash is stored; tRPC accepts a key in the
+      // `x-api-key` header (see `readSessionUser`).
+      apiKey({
+        // The plugin's default limit is 10 requests a day per key.
+        // TODO: pick a per-key budget, or rely on the D1 limiter above.
+        rateLimit: { enabled: false },
+      }),
       // Bot check on sign-up, email sign-in and password-reset requests (the
       // plugin's default endpoints). The client sends the widget's token in
       // `x-captcha-response`.

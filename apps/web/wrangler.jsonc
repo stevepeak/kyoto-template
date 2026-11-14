@@ -1,6 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "main": ".open-next/worker.js",
+  // OpenNext's handler (.open-next/worker.js) wrapped with Sentry — see worker.ts.
+  "main": "worker.ts",
   // TODO: choose the Worker name (and keep apps/workflows' service binding in sync).
   "name": "template-web",
   "compatibility_date": "2025-08-16",
@@ -12,6 +13,8 @@
   "observability": {
     "enabled": true,
   },
+  // The deployed version's id — Sentry tags events with it as the release.
+  "version_metadata": { "binding": "CF_VERSION_METADATA" },
   // TODO: custom domain — `"routes": [{ "pattern": "app.example.com", "custom_domain": true }]`.
 
   // Service binding to the workflows worker. Wrangler routes RPC calls
@@ -49,7 +52,7 @@
 
   // Vars (non-secret). Secrets: `wrangler secret put BETTER_AUTH_SECRET`,
   // `GOOGLE_CLIENT_SECRET`, `TURNSTILE_SECRET_KEY`, `OPENROUTER_API_KEY`,
-  // `WF_CONNECTOR_KEY`, `POSTHOG_API_KEY`.
+  // `WF_CONNECTOR_KEY`, `POSTHOG_API_KEY`, `SENTRY_DSN`.
   // TODO: fill in production values.
   "vars": {
     "APP_URL": "",
@@ -58,5 +61,54 @@
     "EMAIL_FROM": "",
     "EMAIL_FROM_NAME": "",
     "POSTHOG_HOST": "https://us.i.posthog.com",
+  },
+
+  // ── Staging: PR preview deploys (.github/workflows/ci.yml `preview`) ──────
+  // Its own Worker, D1s and bucket so a PR never touches production data.
+  // Each PR uploads a version with alias `pr-<n>`, served at
+  // https://pr-<n>-template-web-staging.<subdomain>.workers.dev.
+  // Bindings below are NOT inherited from the top level, so they're repeated.
+  // TODO: create the staging resources (`/setup preview`) and paste the ids.
+  "env": {
+    "staging": {
+      "name": "template-web-staging",
+      "workers_dev": true,
+      "preview_urls": true,
+      "version_metadata": { "binding": "CF_VERSION_METADATA" },
+      "services": [
+        { "binding": "WORKFLOWS", "service": "template-workflows-staging" },
+      ],
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "template-db-staging",
+          "database_id": "00000000-0000-0000-0000-000000000002",
+        },
+        {
+          "binding": "WF_DB",
+          "database_name": "template-wf-staging",
+          "database_id": "00000000-0000-0000-0000-000000000003",
+        },
+      ],
+      "r2_buckets": [
+        { "binding": "AVATARS", "bucket_name": "template-avatars-staging" },
+      ],
+      "send_email": [
+        {
+          "name": "EMAIL",
+          "allowed_sender_addresses": ["noreply@example.com"],
+        },
+      ],
+      // APP_URL is per-PR, so it's baked in at build time by CI instead.
+      "vars": {
+        "GOOGLE_CLIENT_ID": "",
+        "TURNSTILE_SITE_KEY": "",
+        "EMAIL_FROM": "",
+        "EMAIL_FROM_NAME": "",
+        "POSTHOG_HOST": "https://us.i.posthog.com",
+        // robots.txt disallows everything on previews.
+        "NOINDEX": "1",
+      },
+    },
   },
 }

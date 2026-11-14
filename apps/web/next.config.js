@@ -1,9 +1,29 @@
 import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare'
+import { withSentryConfig } from '@sentry/nextjs/config'
+
+import { securityHeaders } from './security-headers.js'
+
+// Build-time values (CI passes them to the web build; `next dev` falls back).
+const isDev = process.env.NODE_ENV !== 'production'
+const workflowsUrl =
+  process.env.NEXT_PUBLIC_WORKFLOWS_URL ?? 'http://localhost:8787'
+const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_API_KEY
+  ? (process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com')
+  : undefined
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: securityHeaders({ dev: isDev, workflowsUrl, posthogHost }),
+      },
+    ]
+  },
 
   // Next.js won't serve `app/.well-known/*`, so the OAuth discovery documents
   // MCP clients look for are rewritten to Better Auth's handlers (the `mcp()`
@@ -41,4 +61,17 @@ initOpenNextCloudflareForDev({
   persist: { path: '../../.wrangler/state/v3' },
 })
 
-export default nextConfig
+// Source maps upload only when SENTRY_AUTH_TOKEN (+ SENTRY_ORG,
+// SENTRY_PROJECT) are set — CI for deploys; local builds skip it.
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  sourcemaps: { disable: !process.env.SENTRY_AUTH_TOKEN },
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  // Browser events POST to this app's /monitoring, which forwards to Sentry:
+  // same-origin for the CSP, and invisible to ad blockers.
+  tunnelRoute: '/monitoring',
+  telemetry: false,
+})

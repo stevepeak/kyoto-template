@@ -15,13 +15,15 @@
     "predev:scheduled": "test -e .dev.vars || ln -sf ../../.env .dev.vars",
     "dev:scheduled": "wrangler dev --port 8787 --persist-to ../../.wrangler/state --test-scheduled",
     "deploy": "wrangler deploy --var \"WF_SDK_RELEASE:$(git rev-parse HEAD:packages/007)\"",
+    "deploy:staging": "wrangler deploy --env staging --keep-vars --var \"WF_SDK_RELEASE:$(git rev-parse HEAD:packages/007)\"",
     "tail": "wrangler tail",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv worker-env.d.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . && prettier --ignore-path='../../.prettierignore' --check .",
     "fix": "eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write .",
     "db:migrate:wf:local": "wrangler d1 migrations apply template-wf --local --persist-to ../../.wrangler/state",
-    "db:migrate:wf": "wrangler d1 migrations apply template-wf --remote"
+    "db:migrate:wf": "wrangler d1 migrations apply template-wf --remote",
+    "db:migrate:wf:staging": "wrangler d1 migrations apply template-wf-staging --remote --env staging"
   },
   "dependencies": {
     "@app/agents": "workspace:*",

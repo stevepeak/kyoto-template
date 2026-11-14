@@ -6,6 +6,7 @@ import {
   type WorkflowName,
   type WorkflowsRpc,
 } from '@app/workflows-client'
+import * as Sentry from '@sentry/cloudflare'
 import { resolveAssignedVersion } from '@stevepeak/007'
 import {
   startEvalSweepWorkflow,
@@ -26,19 +27,31 @@ import { createWfDb } from '@stevepeak/007/storage'
 import { WorkerEntrypoint } from 'cloudflare:workers'
 
 import { signRunToken, verifyRunToken } from './auth'
+import { ProgressRoom as ProgressRoomBase } from './durable-objects/progress-room'
 import { createEvalSweepClient } from './eval-sweep-client'
 import { handleNotificationsBatch } from './queues/notifications'
+import { sentryOptions } from './sentry'
+import { DripEmail as DripEmailBase } from './workflows/drip-email'
+import { ExampleAgent as ExampleAgentBase } from './workflows/example-agent'
+import { HelloWorld as HelloWorldBase } from './workflows/hello-world'
+import { NightlyCleanup as NightlyCleanupBase } from './workflows/nightly-cleanup'
 
 // ── 007 ──────────────────────────────────────────────────────────────────────
 // The SDK's durable classes, bound in wrangler.jsonc as GRAPH_WORKFLOW,
-// EVAL_SWEEP_WORKFLOW and RUN_ROOM.
-// TODO: wrap with @sentry/cloudflare's instrumentWorkflowWithSentry /
-// instrumentDurableObjectWithSentry once Sentry is decided on.
-export const GraphWorkflow = makeGraphWorkflow<HostDeps, Env>(wfConfig)
-export const EvalSweepWorkflow = makeEvalSweepWorkflow<Env>({
-  createClient: createEvalSweepClient,
-})
-export const RunRoom = makeRunRoom<HostDeps, Env>(wfConfig)
+// EVAL_SWEEP_WORKFLOW and RUN_ROOM. Every exported class is wrapped with
+// Sentry — each runs in its own invocation, so each needs its own init.
+export const GraphWorkflow = Sentry.instrumentWorkflowWithSentry(
+  sentryOptions,
+  makeGraphWorkflow<HostDeps, Env>(wfConfig),
+)
+export const EvalSweepWorkflow = Sentry.instrumentWorkflowWithSentry(
+  sentryOptions,
+  makeEvalSweepWorkflow<Env>({ createClient: createEvalSweepClient }),
+)
+export const RunRoom = Sentry.instrumentDurableObjectWithSentry(
+  sentryOptions,
+  makeRunRoom<HostDeps, Env>(wfConfig),
+)
 
 /** Start the workflow version assigned to `triggerKind`. */
 async function startTriggeredRun(
@@ -69,11 +82,26 @@ async function startTriggeredRun(
 // TODO: decide whether to keep these hand-written example workflows (and the
 // ProgressRoom/SSE plumbing below) now that 007 runs authored workflows.
 
-export { ProgressRoom } from './durable-objects/progress-room'
-export { HelloWorld } from './workflows/hello-world'
-export { ExampleAgent } from './workflows/example-agent'
-export { DripEmail } from './workflows/drip-email'
-export { NightlyCleanup } from './workflows/nightly-cleanup'
+export const ProgressRoom = Sentry.instrumentDurableObjectWithSentry(
+  sentryOptions,
+  ProgressRoomBase,
+)
+export const HelloWorld = Sentry.instrumentWorkflowWithSentry(
+  sentryOptions,
+  HelloWorldBase,
+)
+export const ExampleAgent = Sentry.instrumentWorkflowWithSentry(
+  sentryOptions,
+  ExampleAgentBase,
+)
+export const DripEmail = Sentry.instrumentWorkflowWithSentry(
+  sentryOptions,
+  DripEmailBase,
+)
+export const NightlyCleanup = Sentry.instrumentWorkflowWithSentry(
+  sentryOptions,
+  NightlyCleanupBase,
+)
 
 function bindingFor(env: Env, name: WorkflowName): Workflow {
   switch (name) {
@@ -119,10 +147,7 @@ const corsHeaders = {
  *
  *   const handle = await env.WORKFLOWS.startRun('example-agent', { name })
  */
-export default class WorkflowsService
-  extends WorkerEntrypoint<Env>
-  implements WorkflowsRpc
-{
+class WorkflowsService extends WorkerEntrypoint<Env> implements WorkflowsRpc {
   async startRun(
     workflow: WorkflowName,
     params: unknown,
@@ -261,11 +286,15 @@ export default class WorkflowsService
 
   /** Queue consumer — runs once per batch. */
   override async queue(batch: MessageBatch<unknown>): Promise<void> {
-    if (batch.queue === 'template-notifications') {
+    // Prefix match: staging's queue is `template-notifications-staging`.
+    if (batch.queue.startsWith('template-notifications')) {
       await handleNotificationsBatch(batch, this.env)
     }
   }
 }
+
+// Errors in RPC calls, fetch, cron and queue handlers all reach Sentry.
+export default Sentry.withSentry(sentryOptions, WorkflowsService)
 
 /**
  * Length-independent equality for the shared-secret check, so a wrong token

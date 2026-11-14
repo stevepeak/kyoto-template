@@ -95,7 +95,8 @@ const envSchema = z.object({
   ),
 
   // Sentry
-  // TODO: decide whether Sentry is required (and wire @sentry/cloudflare).
+  // Wired in both Workers (apps/web/worker.ts, apps/workflows/src/sentry.ts)
+  // and the browser; off when unset.
   SENTRY_DSN: optionalNonEmpty(),
 
   // PostHog

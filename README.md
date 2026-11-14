@@ -12,16 +12,17 @@ two MCP servers behind OAuth.
 
 ## What's included
 
-| Feature                                                                                                                                                                            | Where                                                                |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| **Cloudflare everything** — two Workers (web + workflows), D1, Email Sending, Workflows, Durable Objects, Queues                                                                   | `apps/*/wrangler.jsonc`                                              |
-| **D1 + Drizzle** — `createDb(env.DB)`; in-memory `freshDb()` for tests that replays real migrations and enforces D1 limits                                                         | `packages/db`                                                        |
-| **User accounts** — better-auth, per-request on D1; email/password, **Google** (shown only when configured), **passkeys**; `/login`                                                | `apps/web/lib/auth.ts`                                               |
-| **Auth hardening** — required email verification, forgot/reset password, active-session list with sign-out, D1-backed rate limits, optional **Turnstile** on sign-up/sign-in/reset | `apps/web/lib/auth.ts`, `app/(site)/*-password`, `settings/security` |
-| **007** — workflow authoring console at `/workflows`, durable runs in the workflows Worker, its own D1 (`WF_DB`)                                                                   | `packages/007` (submodule), `packages/wf-host`                       |
-| **MCP** — app MCP at `/api/mcp` (`whoami`), 007 MCP at `/api/wf/mcp[/write]`; OAuth 2.1 via better-auth `mcp()` with dynamic client registration and a consent screen              | `apps/web/lib/app-mcp.ts`, `lib/wf-mcp.ts`                           |
-| **React Email** — templates + render to `{subject, html, text}`, sent through the Cloudflare `EMAIL` binding (logged in dev)                                                       | `packages/email`, `apps/web/lib/email.ts`                            |
-| **Legal pages** — `/privacy` and `/terms` templates with a "Draft" banner until finalised                                                                                          | `apps/web/lib/legal`                                                 |
+| Feature                                                                                                                                                                                                                                     | Where                                                                                                             |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| **Cloudflare everything** — two Workers (web + workflows), D1, Email Sending, Workflows, Durable Objects, Queues                                                                                                                            | `apps/*/wrangler.jsonc`                                                                                           |
+| **D1 + Drizzle** — `createDb(env.DB)`; in-memory `freshDb()` for tests that replays real migrations and enforces D1 limits                                                                                                                  | `packages/db`                                                                                                     |
+| **User accounts** — better-auth, per-request on D1; email/password, **Google** (shown only when configured), **passkeys**; `/login`                                                                                                         | `apps/web/lib/auth.ts`                                                                                            |
+| **Auth hardening** — required email verification, forgot/reset password, active-session list with sign-out, D1-backed rate limits, optional **Turnstile** on sign-up/sign-in/reset                                                          | `apps/web/lib/auth.ts`, `app/(site)/*-password`, `settings/security`                                              |
+| **Production basics** — Sentry (browser + both Workers), CSP/HSTS/security headers, `/api/health`, `robots.txt` + sitemap + generated OG image, per-category email opt-outs with one-click unsubscribe, PR preview deploys on a staging env | `apps/web/worker.ts`, `security-headers.js`, `lib/health.ts`, `app/robots.ts`, `settings/notifications`, `ci.yml` |
+| **007** — workflow authoring console at `/workflows`, durable runs in the workflows Worker, its own D1 (`WF_DB`)                                                                                                                            | `packages/007` (submodule), `packages/wf-host`                                                                    |
+| **MCP** — app MCP at `/api/mcp` (`whoami`), 007 MCP at `/api/wf/mcp[/write]`; OAuth 2.1 via better-auth `mcp()` with dynamic client registration and a consent screen                                                                       | `apps/web/lib/app-mcp.ts`, `lib/wf-mcp.ts`                                                                        |
+| **React Email** — templates + render to `{subject, html, text}`, sent through the Cloudflare `EMAIL` binding (logged in dev)                                                                                                                | `packages/email`, `apps/web/lib/email.ts`                                                                         |
+| **Legal pages** — `/privacy` and `/terms` templates with a "Draft" banner until finalised                                                                                                                                                   | `apps/web/lib/legal`                                                                                              |
 
 ## Quick start
 
@@ -102,11 +103,24 @@ config/         shared eslint (react/server presets) + tsconfig
 CI (`.github/workflows/ci.yml`) runs every check on PRs; on `main` it applies
 D1 migrations, deploys the workflows Worker, then builds and deploys the web
 Worker. Required repo secrets: `CLOUDFLARE_API_TOKEN` (D1:Edit + Workers
-Scripts:Edit), `CLOUDFLARE_ACCOUNT_ID`, `APP_URL`.
+Scripts:Edit), `CLOUDFLARE_ACCOUNT_ID`, `APP_URL`. Optional: `NEXT_PUBLIC_SENTRY_DSN`,
+`SENTRY_AUTH_TOKEN` (+ variables `SENTRY_ORG`, `SENTRY_PROJECT`) for Sentry
+with source maps.
+
+**PR previews** (opt-in): with repo variables `PREVIEW_DEPLOYS=true` and
+`CF_WORKERS_SUBDOMAIN`, each same-repo PR uploads a web version with alias
+`pr-<n>` to the staging Worker (`env.staging` in each wrangler file — its own
+D1s, bucket and queues) and comments the URL. Previews share the staging data
+and workflows Worker, and are never indexed. `/setup preview` creates the
+staging resources.
 
 Worker secrets (`wrangler secret put …` in each app):
 `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_SECRET`, `TURNSTILE_SECRET_KEY`, `OPENROUTER_API_KEY`,
-`WF_CONNECTOR_KEY` (same value on both Workers), `TOKEN_SIGNING_KEY` (workflows).
+`WF_CONNECTOR_KEY` (same value on both Workers), `TOKEN_SIGNING_KEY` (workflows),
+`SENTRY_DSN` (both Workers).
+
+The web Worker's entry is `apps/web/worker.ts` — OpenNext's generated handler
+wrapped with Sentry — so `wrangler` needs a `build:cloudflare` first.
 
 ## Decisions for you
 
@@ -128,9 +142,16 @@ Everything below is a `TODO` in code. Nothing here was decided for you.
   models/provider, tools, triggers, run-scope identity, telemetry; whether to
   keep the hand-written example Workflows now that 007 exists.
 - **MCP:** app scope name + consent copy, server instructions, the app's tools.
-- **Brand:** product name (`apps/web/lib/brand.ts`, `packages/email/src/brand.ts`).
-- **Observability:** whether Sentry / PostHog are required, and wiring Sentry
-  into the workflows Worker.
+- **Brand:** product name and description (`apps/web/lib/brand.ts`,
+  `packages/email/src/brand.ts`), the social image (`app/opengraph-image.tsx`).
+- **Observability:** Sentry trace sample rates (10%), Session Replay on errors
+  (privacy policy!), whether PostHog is required, an uptime monitor on
+  `/api/health`.
+- **Security headers:** the CSP allows inline scripts (Next hydration);
+  switch to nonces for a strict policy. HSTS has no `includeSubDomains` yet.
+- **Notifications:** the optional email categories (`NOTIFICATION_CATEGORIES`
+  in `packages/api`); send product mail with `sendNotificationEmail` so it
+  honours opt-outs and carries `List-Unsubscribe`.
 - **Strictness:** `noUncheckedIndexedAccess` in `config/tsconfig/bun.json`.
 
 ## License

@@ -1,6 +1,7 @@
 import { workflowInputs } from '@app/workflows-client'
 import { z } from 'zod'
 
+import { notificationsRouter } from './notifications'
 import {
   createCallerFactory,
   protectedProcedure,
@@ -9,6 +10,13 @@ import {
 } from './trpc'
 
 export type { Context, SessionUser } from './context'
+export {
+  isNotificationEnabled,
+  NOTIFICATION_CATEGORIES,
+  type NotificationCategory,
+  notificationCategorySchema,
+  setNotificationPreference,
+} from './notifications'
 
 const meRouter = router({
   /** The signed-in user. Also backs the MCP `whoami` tool. */
@@ -46,6 +54,7 @@ export const appRouter = router({
   me: meRouter,
   hello: helloRouter,
   workflows: workflowsRouter,
+  notifications: notificationsRouter,
 })
 
 // Export type router type signature,

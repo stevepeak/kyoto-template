@@ -23,7 +23,11 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     : null
 
   return (
-    <AppShell initialUser={user} isAdmin={canUseWorkflows(user?.email)}>
+    <AppShell
+      initialUser={user}
+      isAdmin={canUseWorkflows(user?.email)}
+      isImpersonating={Boolean(session?.session.impersonatedBy)}
+    >
       {children}
     </AppShell>
   )

@@ -16,6 +16,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply template-db --local --persist-to ../../.wrangler/state",
     "db:migrate": "wrangler d1 migrations apply template-db --remote",
+    "db:migrate:staging": "wrangler d1 migrations apply template-db-staging --remote --env staging",
     "db:studio": "bun --env-file=../../.env drizzle-kit studio",
     "db:studio:local": "drizzle-kit studio --config drizzle.config.local.ts",
     "test": "bun test",

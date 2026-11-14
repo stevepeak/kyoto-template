@@ -73,7 +73,7 @@ export function TriggerCard() {
           </div>
 
           {streamOutput.length > 0 && (
-            <div className="rounded-md bg-gray-900 p-3">
+            <div className="rounded-md bg-gray-900 p-3 dark:bg-black">
               <p className="mb-2 text-xs text-gray-400">Stream Output:</p>
               <div className="max-h-32 overflow-y-auto font-mono text-xs text-green-400">
                 {streamOutput.map((line, index) => (

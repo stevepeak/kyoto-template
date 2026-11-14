@@ -32,6 +32,9 @@ declare global {
       // Cloudflare Email Sending.
       EMAIL: SendEmail
 
+      // The deployed Worker version — Sentry's release id.
+      CF_VERSION_METADATA: WorkerVersionMetadata
+
       // Queue producer binding.
       NOTIFICATIONS: Queue<unknown>
 

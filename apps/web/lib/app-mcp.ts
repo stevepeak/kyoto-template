@@ -247,9 +247,10 @@ export async function handleAppMcpRequest(req: Request): Promise<Response> {
         // Awaited, so the audit row exists by the time the client sees the
         // result. Never throws: a failed write must not fail the call.
         try {
-          await db.insert(schema.mcpToolCall).values({
+          await db.insert(schema.auditEvent).values({
             id: crypto.randomUUID(),
             userId,
+            type: 'mcp_tool_call',
             clientId,
             ...call,
             createdAt: new Date(),

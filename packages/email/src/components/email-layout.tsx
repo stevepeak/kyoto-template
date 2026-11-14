@@ -4,6 +4,7 @@ import {
   Head,
   Hr,
   Html,
+  Link,
   Section,
   Text,
 } from '@react-email/components'
@@ -23,6 +24,12 @@ export interface EmailLayoutProps {
   preview: string
   /** Card width in px. 520 suits a short message built around one link. */
   maxWidth?: number
+  /**
+   * One-click unsubscribe link for an optional category (product updates,
+   * tips). Leave unset on security/account mail, which can't be turned off.
+   * The sender also puts it in the `List-Unsubscribe` header.
+   */
+  unsubscribeUrl?: string
   children: ReactNode
 }
 
@@ -37,6 +44,7 @@ export interface EmailLayoutProps {
 export function EmailLayout({
   preview,
   maxWidth = 520,
+  unsubscribeUrl,
   children,
 }: EmailLayoutProps) {
   return (
@@ -124,6 +132,25 @@ export function EmailLayout({
           >
             {FOOTER_TEXT}
           </Text>
+          {unsubscribeUrl ? (
+            <Text
+              style={{
+                color: color.inkMuted,
+                fontSize: '12px',
+                lineHeight: '18px',
+                margin: '4px 0 0',
+              }}
+            >
+              Don’t want these emails?{' '}
+              <Link
+                href={unsubscribeUrl}
+                style={{ color: color.inkMuted, textDecoration: 'underline' }}
+              >
+                Unsubscribe
+              </Link>
+              .
+            </Text>
+          ) : null}
         </Container>
       </Body>
     </Html>

@@ -3,6 +3,9 @@
 @import '@stevepeak/007/ui/styles.css';
 @plugin "@tailwindcss/typography";
 
+/* Dark mode follows the `.dark` class next-themes puts on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme inline {
   --radius-xs: calc(var(--radius) - 4px);
   --radius-sm: calc(var(--radius) - 4px);
@@ -76,6 +79,95 @@
   --shadow-xl:
     0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
   --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+}
+
+/*
+ * Dark theme. Most UI is styled with raw `white`/`gray-*`/`neutral-*` (and a
+ * few status colors) rather than the tokens above, so dark mode remaps those
+ * palette variables instead of adding `dark:` variants everywhere: the gray
+ * scale inverts, white becomes the page background, and status tints/texts
+ * flip to dark tints/light texts. Prefer the semantic tokens in new code.
+ */
+.dark {
+  color-scheme: dark;
+
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --card: #141414;
+  --card-foreground: #fafafa;
+  --popover: #171717;
+  --popover-foreground: #fafafa;
+  --primary: #fafafa;
+  --primary-foreground: #0a0a0a;
+  --primary-hover: #e5e5e5;
+  --secondary: #1f1f1f;
+  --secondary-foreground: #fafafa;
+  --muted: #1f1f1f;
+  --muted-foreground: #a3a3a3;
+  --accent: #1f1f1f;
+  --accent-foreground: #fafafa;
+  --destructive: #dc2626;
+  --destructive-foreground: #fafafa;
+  --border: #2a2a2a;
+  --input: #2a2a2a;
+  --ring: #d4d4d4;
+
+  --color-white: #0a0a0a;
+  --color-gray-50: #141414;
+  --color-gray-100: #1f1f1f;
+  --color-gray-200: #2a2a2a;
+  --color-gray-300: #3a3a3a;
+  --color-gray-400: #737373;
+  --color-gray-500: #a3a3a3;
+  --color-gray-600: #b8b8b8;
+  --color-gray-700: #d4d4d4;
+  --color-gray-800: #e5e5e5;
+  --color-gray-900: #fafafa;
+  --color-gray-950: #ffffff;
+  --color-neutral-50: var(--color-gray-50);
+  --color-neutral-100: var(--color-gray-100);
+  --color-neutral-200: var(--color-gray-200);
+  --color-neutral-300: var(--color-gray-300);
+  --color-neutral-400: var(--color-gray-400);
+  --color-neutral-500: var(--color-gray-500);
+  --color-neutral-600: var(--color-gray-600);
+  --color-neutral-700: var(--color-gray-700);
+  --color-neutral-800: var(--color-gray-800);
+  --color-neutral-900: var(--color-gray-900);
+  --color-neutral-950: var(--color-gray-950);
+
+  --color-red-50: #2a1214;
+  --color-red-100: #3b1518;
+  --color-red-200: #5c1d22;
+  --color-red-300: #7f1d1d;
+  --color-red-600: #f87171;
+  --color-red-700: #fca5a5;
+  --color-red-800: #fecaca;
+  --color-red-900: #fee2e2;
+  --color-green-50: #0f2416;
+  --color-green-100: #14301d;
+  --color-green-200: #1a4428;
+  --color-green-600: #4ade80;
+  --color-green-700: #86efac;
+  --color-green-800: #bbf7d0;
+  --color-emerald-50: #0b2620;
+  --color-emerald-100: #0f3229;
+  --color-emerald-200: #134537;
+  --color-emerald-600: #34d399;
+  --color-emerald-700: #6ee7b7;
+  --color-emerald-800: #a7f3d0;
+  --color-amber-50: #2a1f0a;
+  --color-amber-100: #3a2a0c;
+  --color-amber-200: #4d3810;
+  --color-amber-300: #6b4d12;
+  --color-amber-400: #b45309;
+  --color-amber-700: #fcd34d;
+  --color-amber-800: #fde68a;
+  --color-amber-900: #fef3c7;
+  --color-blue-50: #0f1b33;
+  --color-blue-100: #142449;
+  --color-blue-600: #60a5fa;
+  --color-blue-700: #93c5fd;
 }
 
 /* Tailwind V4 thinks that laptops don't have hover - this fixes it */

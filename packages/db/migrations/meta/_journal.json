@@ -22,6 +22,13 @@
       "when": 1794684453574,
       "tag": "0002_friendly_blob",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1794686254047,
+      "tag": "0003_numerous_praxagora",
+      "breakpoints": true
     }
   ]
 }

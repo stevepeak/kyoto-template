@@ -1,10 +1,12 @@
 'use client'
 
 import { ChevronsUpDown, LogOut, Settings } from 'lucide-react'
+import { useTheme } from 'next-themes'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
+import { THEME_OPTIONS } from '@/components/command-palette'
 import { authClient } from '@/lib/auth-client'
 import { PRIVACY_HREF, TERMS_HREF } from '@/lib/legal/links'
 
@@ -54,6 +56,40 @@ function UserLabel({ user }: { user: AccountUser }) {
 
 const itemClass =
   'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+
+/** Light / dark / system switcher shown inside the account popover. */
+function ThemeSwitcher() {
+  const { theme, setTheme } = useTheme()
+  return (
+    <div className="flex items-center justify-between gap-2 px-2 py-1">
+      <span className="text-sm text-gray-700">Theme</span>
+      <div
+        role="radiogroup"
+        aria-label="Theme"
+        className="flex rounded-md border border-gray-200 p-0.5"
+      >
+        {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
+          <button
+            key={value}
+            type="button"
+            role="radio"
+            aria-checked={theme === value}
+            aria-label={label}
+            title={label}
+            onClick={() => setTheme(value)}
+            className={`rounded p-1 ${
+              theme === value
+                ? 'bg-gray-100 text-gray-900'
+                : 'text-gray-500 hover:text-gray-900'
+            }`}
+          >
+            <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 interface AccountMenuProps {
   user: AccountUser
@@ -110,6 +146,7 @@ export function AccountMenu({ user }: AccountMenuProps) {
             <Settings className="h-4 w-4" aria-hidden="true" />
             Settings
           </Link>
+          <ThemeSwitcher />
 
           <div className="my-1 h-px bg-gray-200" />
           <Link

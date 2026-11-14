@@ -1,36 +1,18 @@
 'use client'
 
-import {
-  House,
-  ListChecks,
-  type LucideIcon,
-  Mail,
-  Menu,
-  Workflow,
-  X,
-} from 'lucide-react'
+import { Menu, Search, X } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { type ReactNode, useState } from 'react'
 
+import { CommandPalette, ShortcutHint } from '@/components/command-palette'
 import { SiteFooter } from '@/components/site-footer'
 import { authClient } from '@/lib/auth-client'
 import { PRODUCT_NAME } from '@/lib/brand'
 
 import { AccountMenu, type AccountUser } from './account-menu'
-
-type NavItem = { href: string; label: string; icon: LucideIcon }
-
-// TODO: the app's primary navigation.
-const NAV_ITEMS: NavItem[] = [
-  { href: '/', label: 'Home', icon: House },
-  { href: '/emails', label: 'Emails', icon: Mail },
-]
-
-const ADMIN_NAV_ITEMS: NavItem[] = [
-  { href: '/workflows', label: '007 Workflows', icon: Workflow },
-  { href: '/setup', label: 'Setup', icon: ListChecks },
-]
+import { ImpersonationBanner } from './impersonation-banner'
+import { ADMIN_NAV_ITEMS, NAV_ITEMS } from './nav'
 
 function isActive(pathname: string, href: string): boolean {
   return href === '/' ? pathname === '/' : pathname.startsWith(href)
@@ -40,14 +22,22 @@ interface AppShellProps {
   children: ReactNode
   /** The server-read session user, used until the client session resolves. */
   initialUser: AccountUser | null
-  /** Show the admin entries (007 console, setup) in the sidebar nav. */
+  /** Show the admin entries (007 console, setup, admin) in the sidebar nav. */
   isAdmin: boolean
+  /** An admin is signed in as `initialUser` — show the way back. */
+  isImpersonating: boolean
 }
 
-export function AppShell({ children, initialUser, isAdmin }: AppShellProps) {
+export function AppShell({
+  children,
+  initialUser,
+  isAdmin,
+  isImpersonating,
+}: AppShellProps) {
   const pathname = usePathname()
   const { data: session, isPending } = authClient.useSession()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [paletteOpen, setPaletteOpen] = useState(false)
 
   const user: AccountUser | null = session
     ? {
@@ -84,6 +74,21 @@ export function AppShell({ children, initialUser, isAdmin }: AppShellProps) {
           aria-label="Close sidebar"
         >
           <X className="h-4 w-4" aria-hidden="true" />
+        </button>
+      </div>
+
+      <div className="px-2">
+        <button
+          type="button"
+          onClick={() => {
+            setMobileOpen(false)
+            setPaletteOpen(true)
+          }}
+          className="flex w-full items-center gap-2 rounded-md border border-gray-200 px-2 py-1.5 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+        >
+          <Search className="h-4 w-4" aria-hidden="true" />
+          <span className="flex-1 text-left">Search…</span>
+          <ShortcutHint />
         </button>
       </div>
 
@@ -136,6 +141,7 @@ export function AppShell({ children, initialUser, isAdmin }: AppShellProps) {
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
+        {isImpersonating && <ImpersonationBanner email={user.email} />}
         <header className="flex h-12 shrink-0 items-center gap-2 border-b border-gray-200 px-3 md:hidden">
           <button
             type="button"
@@ -151,6 +157,12 @@ export function AppShell({ children, initialUser, isAdmin }: AppShellProps) {
         </header>
         <div className="min-h-0 flex-1 overflow-auto">{children}</div>
       </div>
+
+      <CommandPalette
+        open={paletteOpen}
+        onOpenChange={setPaletteOpen}
+        isAdmin={isAdmin}
+      />
     </div>
   )
 }

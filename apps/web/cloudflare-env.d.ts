@@ -19,6 +19,9 @@ declare global {
     // Cloudflare Email Sending.
     EMAIL: SendEmail
 
+    // The deployed Worker version — Sentry's release id.
+    CF_VERSION_METADATA: WorkerVersionMetadata
+
     // R2: user-uploaded profile pictures.
     AVATARS: R2Bucket
 
@@ -29,6 +32,8 @@ declare global {
     EMAIL_FROM?: string
     EMAIL_FROM_NAME?: string
     POSTHOG_HOST?: string
+    // Set on PR preview deploys: robots.txt then disallows everything.
+    NOINDEX?: string
 
     // Secrets (`wrangler secret put …`)
     BETTER_AUTH_SECRET?: string
@@ -37,6 +42,7 @@ declare global {
     OPENROUTER_API_KEY?: string
     WF_CONNECTOR_KEY?: string
     POSTHOG_API_KEY?: string
+    SENTRY_DSN?: string
 
     // TODO: see lib/wf-access.ts — who may use the 007 console.
     WF_ADMIN_EMAILS?: string

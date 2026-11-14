@@ -1,5 +1,5 @@
 ---
-description: Guided setup of this template on Cloudflare — names, D1/R2/Queues, secrets, email, Turnstile, CI
+description: Guided setup of this template on Cloudflare — names, D1/R2/Queues, secrets, email, Turnstile, Sentry, previews, CI
 argument-hint: '[phase name to jump to, e.g. "turnstile"]'
 ---
 
@@ -32,6 +32,9 @@ Code Mode: `search()` to find an API endpoint, `execute()` to call it). It
 covers the whole Cloudflare API, including Turnstile and Email Sending, which
 wrangler doesn't. The first call opens a browser for OAuth.
 
+The **`sentry` MCP** (`https://mcp.sentry.dev/mcp`) can find or create the
+Sentry org/project and read its DSN for the Sentry phase.
+
 Fall back to wrangler. It does NOT read `.env` on its own:
 
 ```bash
@@ -57,12 +60,15 @@ Ask for: product name, a short resource prefix (replaces `template`), and the
 production hostname (e.g. `app.example.com`). Then update, keeping each pair
 in sync:
 
-- `PRODUCT_NAME` in `apps/web/lib/brand.ts` and `packages/email/src/brand.ts`.
+- `PRODUCT_NAME` in `apps/web/lib/brand.ts` and `packages/email/src/brand.ts`;
+  ask for a one-line `PRODUCT_DESCRIPTION` too (`apps/web/lib/brand.ts`).
 - Worker names: `apps/web/wrangler.jsonc` `name`, `apps/workflows/wrangler.jsonc`
   `name`, and web's `services[].service` (must equal the workflows name).
 - D1 `database_name` in all three wrangler files (`apps/web`, `apps/workflows`,
   `packages/db`) plus the `db:migrate*` scripts in `packages/db/package.json`;
-  R2 bucket name (web); queue + DLQ names (workflows).
+  R2 bucket name (web); queue + DLQ names (workflows). Rename the `-staging`
+  twins in each file's `env.staging` block the same way, and the staging
+  Worker names in `.github/workflows/ci.yml` (`preview` job URLs).
 
 ### 3. Resources
 
@@ -77,8 +83,10 @@ Create what's missing, then paste ids back:
 
 ### 4. Migrations
 
-Ask, then `bun run db:migrate` (app D1 + 007's D1, remote). Show the list of
-pending migrations first (`wrangler d1 migrations list <db> --remote`).
+The repo rules forbid agents running `db:migrate`, so hand this one over: show
+the pending list (`wrangler d1 migrations list <db> --remote`), then ask the
+user to run `! bun run db:migrate` (app D1 + 007's D1, remote). CI also applies
+migrations on every push to `main`.
 
 ### 5. Secrets
 
@@ -93,6 +101,7 @@ deploy.
 | `WF_CONNECTOR_KEY`   | web **and** workflows, same value | generate (optional)     |
 | `OPENROUTER_API_KEY` | web, workflows                    | ask the user (optional) |
 | `POSTHOG_API_KEY`    | web                               | ask the user (optional) |
+| `SENTRY_DSN`         | web **and** workflows             | Sentry phase            |
 
 Check `wrangler secret list` first; don't overwrite an existing secret without
 asking.
@@ -122,7 +131,50 @@ Required: sign-ups need the verification email.
   `wrangler secret put TURNSTILE_SECRET_KEY` (web).
 - Local: offer Cloudflare's always-pass test keys from `.env.example`.
 
-### 9. Optional features (ask which)
+### 9. Sentry
+
+Recommended before launch — otherwise production errors only reach Workers
+logs.
+
+- With the `sentry` MCP: find or create a project (platform: Next.js) and read
+  its DSN. Without it, have the user create one and paste the DSN.
+- `wrangler secret put SENTRY_DSN` on **both** Workers (same DSN is fine; use a
+  second project if they want the workflows Worker separate).
+- The browser DSN is build-time: GitHub secret `NEXT_PUBLIC_SENTRY_DSN`.
+- Readable stack traces: create an org auth token (scope `project:releases`) →
+  GitHub secret `SENTRY_AUTH_TOKEN`, plus GitHub _variables_ `SENTRY_ORG` and
+  `SENTRY_PROJECT`.
+- Remind them Session Replay records around errors
+  (`apps/web/instrumentation-client.ts`) — their privacy policy should say so.
+
+### 10. Uptime monitoring
+
+`GET /api/health` returns 200 when D1 and the workflows Worker answer, 503
+otherwise. Point a monitor at `https://<host>/api/health`: Cloudflare Health
+Checks (Pro plan and up, via the MCP) or any external uptime service — ask
+which. Nothing to configure in the repo.
+
+### 11. PR previews (optional)
+
+Each same-repo PR gets its own URL, backed by a separate **staging** Worker
+pair and staging D1s/bucket/queues (`env.staging` in all three wrangler files,
+`preview` job in `.github/workflows/ci.yml`). Ask whether they want it; if so:
+
+- Create `<prefix>-db-staging`, `<prefix>-wf-staging`, the
+  `<prefix>-avatars-staging` bucket and the staging queue + DLQ; paste the ids
+  into each `env.staging` block.
+- Look up the account's workers.dev subdomain (MCP:
+  `/accounts/{id}/workers/subdomain`); set `PUBLIC_BASE_URL` in the workflows
+  `env.staging` vars to `https://<prefix>-workflows-staging.<subdomain>.workers.dev`.
+- Secrets on the staging Workers (`--env staging`): fresh
+  `BETTER_AUTH_SECRET` (web) and `TOKEN_SIGNING_KEY` (workflows); `SENTRY_DSN`
+  on both if set up.
+- GitHub _variables_ `PREVIEW_DEPLOYS=true` and `CF_WORKERS_SUBDOMAIN`.
+- Tell them: previews share the staging DBs and workflows Worker (last PR
+  wins), use email/password only (Google and passkeys are tied to the
+  production domain), and never index (`NOINDEX`).
+
+### 12. Optional features (ask which)
 
 - **Google sign-in** — guide them: Google Cloud → OAuth client, redirect URI
   `https://<host>/api/auth/callback/google`; `GOOGLE_CLIENT_ID` in vars,
@@ -130,18 +182,19 @@ Required: sign-ups need the verification email.
 - **Workflow admins** — `WF_ADMIN_EMAILS` (comma-separated) in web vars.
 - **PostHog** — `NEXT_PUBLIC_POSTHOG_API_KEY` is build-time: GitHub secret.
 
-### 10. CI
+### 13. CI
 
 If a GitHub remote exists, ask, then `gh secret set` for
 `CLOUDFLARE_API_TOKEN` (needs D1:Edit + Workers Scripts:Edit — check the
 token's permissions via the API first), `CLOUDFLARE_ACCOUNT_ID`, `APP_URL`, and
-any `NEXT_PUBLIC_*` values chosen above.
+any `NEXT_PUBLIC_*` / `SENTRY_*` values chosen above (`gh variable set` for
+`SENTRY_ORG`, `SENTRY_PROJECT`, `PREVIEW_DEPLOYS`, `CF_WORKERS_SUBDOMAIN`).
 
-### 11. Wrap-up
+### 14. Wrap-up
 
 - Run `bun run typecheck` to confirm the edited configs still check.
 - `git grep -n TODO -- ':!packages/007'` — list the remaining owner decisions
   (legal pages, copy) that no tool can make.
-- Print the done / skipped / left-for-you list. Point them at the home page
-  setup checklist (`/`) on the deployed app, which reports what that
+- Print the done / skipped / left-for-you list. Point them at the setup
+  checklist (`/setup`) on the deployed app, which reports what that
   deployment can actually see.

@@ -1,12 +1,13 @@
 import { isGoogleEnabled, turnstileSiteKey } from './auth'
-import { PRODUCT_NAME } from './brand'
+import { PRODUCT_DESCRIPTION, PRODUCT_NAME } from './brand'
 import { cfEnv, cfVar } from './cf-env'
 import { PRIVACY_POLICY } from './legal/privacy-policy'
 import { TERMS_OF_USE } from './legal/terms-of-use'
 import { configuredAppUrl } from './mcp-resources'
 
-/** The template's placeholder name, so the check notices it was changed. */
+/** The template's placeholders, so the checks notice they were changed. */
 const TEMPLATE_PRODUCT_NAME = 'Acme Co'
+const TEMPLATE_PRODUCT_DESCRIPTION = 'A modern Next.js application template'
 
 export type SetupItem = {
   id: string
@@ -41,6 +42,14 @@ export function getSetupChecklist(): SetupItem[] {
       why: 'Shown on the sign-in consent screen, legal pages and every email.',
       how: 'Set PRODUCT_NAME in apps/web/lib/brand.ts.',
       done: PRODUCT_NAME !== TEMPLATE_PRODUCT_NAME,
+      required: true,
+    },
+    {
+      id: 'product-description',
+      title: 'Product description',
+      why: 'Shown in search results, link previews and the generated social image.',
+      how: 'Set PRODUCT_DESCRIPTION in apps/web/lib/brand.ts. Restyle the card in apps/web/app/opengraph-image.tsx.',
+      done: PRODUCT_DESCRIPTION !== TEMPLATE_PRODUCT_DESCRIPTION,
       required: true,
     },
     {
@@ -81,6 +90,14 @@ export function getSetupChecklist(): SetupItem[] {
       why: 'Who may open the 007 workflow console. In production nobody can until this is set.',
       how: 'Set WF_ADMIN_EMAILS (comma-separated) in wrangler.jsonc vars.',
       done: Boolean(cfVar('WF_ADMIN_EMAILS')),
+      required: true,
+    },
+    {
+      id: 'sentry',
+      title: 'Error tracking (Sentry)',
+      why: 'Server, Worker and browser errors with stack traces, plus replays of the moments before a browser error. Without it, production errors only reach Workers logs.',
+      how: 'Create a Sentry project. `wrangler secret put SENTRY_DSN` on BOTH Workers, and pass NEXT_PUBLIC_SENTRY_DSN to the web build (GitHub secret). For readable stack traces add the SENTRY_AUTH_TOKEN secret and SENTRY_ORG / SENTRY_PROJECT variables in GitHub.',
+      done: Boolean(cfVar('SENTRY_DSN') && env.NEXT_PUBLIC_SENTRY_DSN),
       required: true,
     },
     {

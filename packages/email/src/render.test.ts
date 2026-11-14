@@ -38,6 +38,21 @@ describe('renderWelcomeEmail', () => {
   })
 })
 
+describe('unsubscribe footer', () => {
+  test('appears only when an unsubscribe URL is given', async () => {
+    const url = 'https://app.example.com/unsubscribe?token=t'
+    const withLink = await renderWelcomeEmail({
+      ...WelcomeEmail.PreviewProps,
+      unsubscribeUrl: url,
+    })
+    expect(withLink.text).toContain('Unsubscribe')
+    expect(withLink.text).toContain(url)
+
+    const without = await renderWelcomeEmail(WelcomeEmail.PreviewProps)
+    expect(without.text).not.toContain('Unsubscribe')
+  })
+})
+
 describe('renderPasswordResetEmail', () => {
   test('carries the link and expiry in both parts', async () => {
     const mail = await renderPasswordResetEmail(PasswordResetEmail.PreviewProps)

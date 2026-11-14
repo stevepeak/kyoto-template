@@ -114,6 +114,10 @@ jobs:
       - uses: ./.github/actions/setup
       - name: Build and deploy to Cloudflare Workers
         env:
+          # Source-map upload to Sentry; skipped when the token is unset.
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
           # Inlined into the client bundle at build time.
           APP_URL: ${{ secrets.APP_URL }}
           NEXT_PUBLIC_APP_URL: ${{ secrets.APP_URL }}
@@ -122,3 +126,66 @@ jobs:
           NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
           NEXT_PUBLIC_WORKFLOWS_URL: ${{ secrets.NEXT_PUBLIC_WORKFLOWS_URL }}
         run: bun run --cwd apps/web deploy:cloudflare
+
+  # ── PR previews ─────────────────────────────────────────────────────────────
+  # Opt-in: set the repo VARIABLES `PREVIEW_DEPLOYS=true` and
+  # `CF_WORKERS_SUBDOMAIN` (your <subdomain>.workers.dev) once the staging
+  # resources exist (`/setup preview`). Each PR uploads a web version with
+  # alias `pr-<n>` to the staging Worker — its own URL, staging D1s, never
+  # production data. Previews SHARE the staging DBs and workflows Worker, so a
+  # PR's migrations and workflows code apply to every preview (last one wins).
+  # Fork PRs get no secrets, so they're skipped.
+  preview:
+    name: Preview deploy
+    needs: [lint, typecheck, test, knip, build]
+    if: >-
+      github.event_name == 'pull_request' &&
+      vars.PREVIEW_DEPLOYS == 'true' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    # One preview at a time: they share the staging DBs and workflows Worker.
+    concurrency:
+      group: preview-staging
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      PREVIEW_ALIAS: pr-${{ github.event.number }}
+      PREVIEW_URL: https://pr-${{ github.event.number }}-template-web-staging.${{ vars.CF_WORKERS_SUBDOMAIN }}.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/setup
+      - name: Apply migrations to staging
+        run: |
+          bun run --cwd packages/db db:migrate:staging
+          bun run --cwd apps/workflows db:migrate:wf:staging
+      - name: Deploy staging workflows worker
+        run: bun run --cwd apps/workflows deploy:staging
+      - name: Build and upload web preview
+        env:
+          # Baked in at build time: auth callbacks and links use the PR's URL.
+          APP_URL: ${{ env.PREVIEW_URL }}
+          NEXT_PUBLIC_APP_URL: ${{ env.PREVIEW_URL }}
+          NEXT_PUBLIC_WORKFLOWS_URL: https://template-workflows-staging.${{ vars.CF_WORKERS_SUBDOMAIN }}.workers.dev
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
+        run: bun run --cwd apps/web upload:preview
+      - name: Comment the preview URL
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- preview-deploy -->'
+            const body = `${marker}\n🔍 Preview: ${process.env.PREVIEW_URL}\n\nRuns against **staging** data. Google sign-in and passkeys are tied to the production domain, so use email/password here.`
+            const { owner, repo } = context.repo
+            const issue_number = context.issue.number
+            const { data: comments } = await github.rest.issues.listComments({ owner, repo, issue_number })
+            const existing = comments.find((c) => c.body?.includes(marker))
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body })
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body })
+            }
