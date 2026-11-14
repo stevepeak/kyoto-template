@@ -78,9 +78,9 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/setup
-      - name: Apply app migrations (kyoto-db)
+      - name: Apply app migrations (template-db)
         run: bun run --cwd packages/db db:migrate
-      - name: Apply 007 migrations (kyoto-wf)
+      - name: Apply 007 migrations (template-wf)
         run: bun run --cwd apps/workflows db:migrate:wf
 
   deploy-workers:

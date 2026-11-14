@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "kyoto-workflows",
+  "name": "template-workflows",
   "main": "src/index.ts",
   "compatibility_date": "2025-08-16",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
@@ -67,12 +67,12 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "kyoto-db",
+      "database_name": "template-db",
       "database_id": "00000000-0000-0000-0000-000000000000",
     },
     {
       "binding": "WF_DB",
-      "database_name": "kyoto-wf",
+      "database_name": "template-wf",
       "database_id": "00000000-0000-0000-0000-000000000001",
       "migrations_dir": "../../packages/007/migrations",
     },
@@ -89,15 +89,15 @@
   // Queues — fire-and-forget background work with batched retries.
   "queues": {
     "producers": [
-      { "queue": "kyoto-notifications", "binding": "NOTIFICATIONS" },
+      { "queue": "template-notifications", "binding": "NOTIFICATIONS" },
     ],
     "consumers": [
       {
-        "queue": "kyoto-notifications",
+        "queue": "template-notifications",
         "max_batch_size": 25,
         "max_batch_timeout": 5,
         "max_retries": 3,
-        "dead_letter_queue": "kyoto-notifications-dlq",
+        "dead_letter_queue": "template-notifications-dlq",
       },
     ],
   },

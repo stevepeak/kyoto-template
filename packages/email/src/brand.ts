@@ -8,7 +8,7 @@
  */
 
 // TODO: product name — keep in step with `apps/web/lib/brand.ts`.
-export const PRODUCT_NAME = 'Kyoto'
+export const PRODUCT_NAME = 'Acme Co'
 
 // TODO: the bare domain the product is served from, shown in the footer.
 export const PRODUCT_DOMAIN = 'example.com'

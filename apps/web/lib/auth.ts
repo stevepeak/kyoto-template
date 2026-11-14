@@ -49,7 +49,13 @@ export function getAuth(db: DB = getDb()) {
   const appResource = resourceUrl(APP_MCP_PATH)
 
   return betterAuth({
-    baseURL: configuredAppUrl(),
+    // With no APP_URL (e.g. no .env), fall back to loopback in dev — an empty
+    // base URL makes Better Auth's plugins throw `Invalid URL` on every request.
+    baseURL:
+      configuredAppUrl() ??
+      (process.env.NODE_ENV === 'development'
+        ? 'http://localhost:3000'
+        : undefined),
     advanced: {
       ipAddress: { ipAddressHeaders: ['cf-connecting-ip'] },
     },

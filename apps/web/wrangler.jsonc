@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "main": ".open-next/worker.js",
   // TODO: choose the Worker name (and keep apps/workflows' service binding in sync).
-  "name": "kyoto-web",
+  "name": "template-web",
   "compatibility_date": "2025-08-16",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
@@ -17,7 +17,7 @@
   // Service binding to the workflows worker. Wrangler routes RPC calls
   // between the two workers in `wrangler dev`; in prod, both workers must
   // be deployed in the same Cloudflare account.
-  "services": [{ "binding": "WORKFLOWS", "service": "kyoto-workflows" }],
+  "services": [{ "binding": "WORKFLOWS", "service": "template-workflows" }],
 
   // D1 — no `migrations_dir` here; this Worker never migrates. App migrations
   // run from packages/db, 007's from apps/workflows.
@@ -25,12 +25,12 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "kyoto-db",
+      "database_name": "template-db",
       "database_id": "00000000-0000-0000-0000-000000000000",
     },
     {
       "binding": "WF_DB",
-      "database_name": "kyoto-wf",
+      "database_name": "template-wf",
       "database_id": "00000000-0000-0000-0000-000000000001",
     },
   ],

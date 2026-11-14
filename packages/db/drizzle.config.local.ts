@@ -3,14 +3,14 @@ import { defineConfig } from 'drizzle-kit'
 
 import { findLocalD1 } from './src/local-d1'
 
-// Local Drizzle Studio for the *local* `kyoto-db` (miniflare-managed SQLite under
+// Local Drizzle Studio for the *local* `template-db` (miniflare-managed SQLite under
 // the shared wrangler state — see Tiltfile + `db:migrate:local`).
 //
 // The default drizzle.config.ts uses the `d1-http` driver and browses the
 // REMOTE D1 whenever Cloudflare creds are in .env, so it never reflects local
 // dev data. This config points Studio straight at the on-disk SQLite file.
 //
-// There are now TWO local D1s (kyoto-db and law-wf), both named after a content
+// There are now TWO local D1s (template-db and template-wf), both named after a content
 // hash, so the file is resolved by the tables it contains rather than by taking
 // the first .sqlite in the directory. See src/local-d1.ts for why `exclude`
 // matters. For the wf_* side, use drizzle.config.wf.local.ts.
@@ -40,9 +40,9 @@ export default defineConfig({
     url: findLocalD1({
       stateDir: '../../.wrangler/state',
       hasTable,
-      // An app table 007 does not have — present on any migrated kyoto-db.
+      // An app table 007 does not have — present on any migrated template-db.
       require: ['user'],
-      label: 'kyoto-db',
+      label: 'template-db',
       hint: 'bun run db:migrate:local',
     }),
   },

@@ -4,6 +4,10 @@ import { Fingerprint } from 'lucide-react'
 import { type FormEvent, useCallback, useEffect, useState } from 'react'
 
 import { authClient } from '@/lib/auth-client'
+import { DEMO_USER } from '@/lib/demo-user'
+
+// Inlined by Next at build time, so the demo button is stripped from prod.
+const IS_DEV = process.env.NODE_ENV === 'development'
 
 type AuthMode = 'signin' | 'signup'
 
@@ -135,6 +139,23 @@ export function AuthCard({
       }
     }
 
+    setIsLoading(false)
+  }
+
+  const handleDemoSignIn = async () => {
+    setError(null)
+    setSuccess(null)
+    setIsLoading(true)
+    const { error } = await authClient.signIn.email({
+      email: DEMO_USER.email,
+      password: DEMO_USER.password,
+    })
+    if (error) {
+      setError(
+        error.message ||
+          'Demo sign-in failed — run `bun run db:seed:local` in apps/web',
+      )
+    }
     setIsLoading(false)
   }
 
@@ -292,6 +313,16 @@ export function AuthCard({
 
       {mode === 'signin' && (
         <>
+          {IS_DEV && (
+            <button
+              type="button"
+              onClick={handleDemoSignIn}
+              disabled={isLoading}
+              className="mb-3 w-full rounded-md border border-dashed border-amber-400 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-50"
+            >
+              Dev: sign in as {DEMO_USER.email}
+            </button>
+          )}
           <button
             type="button"
             onClick={handlePasskeySignIn}
@@ -372,7 +403,8 @@ export function AuthCard({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            minLength={8}
+            // Only enforced on sign-up so the seeded demo account (admin) can sign in.
+            minLength={mode === 'signup' ? 8 : undefined}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
             placeholder="••••••••"
           />

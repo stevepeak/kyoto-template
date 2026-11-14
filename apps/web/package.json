@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "clean": "rm -rf node_modules dist",
+    "predev": "test -e .dev.vars || ln -sf ../../.env .dev.vars",
     "dev": "next dev --port 3000 --turbo",
     "build": "bun --env-file=../../.env next build --turbo",
     "build:cloudflare": "opennextjs-cloudflare build",
@@ -15,9 +16,8 @@
     "lint": "eslint --ignore-pattern='.next' . && prettier --ignore-path='../../.prettierignore' --check .",
     "fix": "eslint --fix --quiet --ignore-pattern='.next' . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write .",
     "typecheck": "tsc --noEmit",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build",
-    "test": "bun test"
+    "test": "bun test",
+    "db:seed:local": "bun scripts/seed-demo-user.ts"
   },
   "dependencies": {
     "@app/api": "workspace:*",
@@ -43,28 +43,18 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@chromatic-com/storybook": "^5.6.0",
-    "@kyoto/eslint-config": "workspace:*",
+    "@app/eslint-config": "workspace:*",
     "@opennextjs/cloudflare": "^1.20.17",
     "wrangler": "catalog:",
-    "@storybook/addon-a11y": "^10.6.7",
-    "@storybook/addon-docs": "^10.6.7",
-    "@storybook/addon-onboarding": "^10.6.7",
-    "@storybook/addon-vitest": "^10.6.7",
-    "@storybook/nextjs-vite": "^10.6.7",
     "@tailwindcss/postcss": "^4.3.5",
     "@tailwindcss/typography": "^0.5.20",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@vitest/browser": "5.1.0",
     "autoprefixer": "^10.6.2",
     "eslint": "^10.4.0",
-    "storybook": "^10.6.7",
     "tailwindcss": "^4.3.5",
     "typescript": "catalog:",
-    "vite": "^8.0.13",
-    "vitest": "5.1.0",
     "@cloudflare/workers-types": "catalog:",
     "@types/bun": "catalog:"
   }

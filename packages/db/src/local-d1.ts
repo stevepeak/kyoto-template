@@ -8,7 +8,7 @@ import { join } from 'node:path'
 //
 // Miniflare names each local D1 after a content hash of its binding, so the
 // filename tells you nothing about which database it holds. There is more than
-// one real D1 in this repo (`kyoto-db` app tables, `kyoto-wf` 007's wf_* tables), so
+// one real D1 in this repo (`template-db` app tables, `template-wf` 007's wf_* tables), so
 // "the first .sqlite that isn't metadata.sqlite" picks a database at readdir
 // order, which is not guaranteed — and a stray 8 KB file from a mistyped
 // binding satisfies that heuristic too.
@@ -33,7 +33,7 @@ export type FindLocalD1Options = {
   require: string[]
   /** Tables that must ALL be absent — needed to tell two similar databases apart. */
   exclude?: string[]
-  /** Database name used in the error message, e.g. 'kyoto-db'. */
+  /** Database name used in the error message, e.g. 'template-db'. */
   label: string
   /** Command suggested when nothing matches, e.g. 'bun run db:migrate:local'. */
   hint: string

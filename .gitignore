@@ -25,8 +25,6 @@ playwright-report
 tmp/
 .next
 next-env.d.ts
-*storybook.log
-storybook-static
 .wrangler
 .open-next
 .wf-migrate.env

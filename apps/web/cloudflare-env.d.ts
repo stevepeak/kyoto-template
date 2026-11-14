@@ -9,7 +9,7 @@ declare global {
   interface CloudflareEnv {
     ASSETS: Fetcher
 
-    // D1 — app tables (`kyoto-db`) and 007's wf_* tables (`kyoto-wf`).
+    // D1 — app tables (`template-db`) and 007's wf_* tables (`template-wf`).
     DB: D1Database
     WF_DB: D1Database
 

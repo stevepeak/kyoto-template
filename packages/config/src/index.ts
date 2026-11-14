@@ -60,7 +60,7 @@ const envSchema = z.object({
     .url()
     .default('http://localhost:8787')
     .describe(
-      'Base URL of the kyoto-workflows worker — used by the server in dev',
+      'Base URL of the template-workflows worker — used by the server in dev',
     ),
   NEXT_PUBLIC_WORKFLOWS_URL: z
     .url()
@@ -126,7 +126,7 @@ const scriptEnvSchema = z.object({
     .string()
     .min(1)
     .describe('Cloudflare API token with D1:Edit'),
-  D1_DATABASE_ID: z.string().min(1).describe('id of the app D1 (kyoto-db)'),
+  D1_DATABASE_ID: z.string().min(1).describe('id of the app D1 (template-db)'),
 })
 
 export type ScriptEnv = z.infer<typeof scriptEnvSchema>

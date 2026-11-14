@@ -11,7 +11,7 @@ describe('renderWelcomeEmail', () => {
   test('greets by first name and links to the app', async () => {
     const mail = await renderWelcomeEmail(WelcomeEmail.PreviewProps)
 
-    expect(mail.subject).toBe('Welcome to Kyoto')
+    expect(mail.subject).toBe('Welcome to Acme Co')
     expect(mail.html).toContain('Welcome, Dana')
     expect(mail.html).toContain('href="https://app.example.com"')
     // The plain part is generated from the HTML, so a layout change can drop
@@ -35,7 +35,7 @@ describe('renderPasswordResetEmail', () => {
     const mail = await renderPasswordResetEmail(PasswordResetEmail.PreviewProps)
     const { resetUrl } = PasswordResetEmail.PreviewProps
 
-    expect(mail.subject).toBe('Reset your Kyoto password')
+    expect(mail.subject).toBe('Reset your Acme Co password')
     expect(mail.html).toContain(resetUrl)
     expect(mail.text).toContain(resetUrl)
     expect(mail.text).toContain('60 minutes')
@@ -46,7 +46,7 @@ describe('renderPasswordResetEmail', () => {
 describe('the preheader', () => {
   test('carries no zero-width padding, and stays out of the plain part', async () => {
     const mail = await renderPasswordResetEmail(PasswordResetEmail.PreviewProps)
-    const preview = 'Choose a new password for Kyoto.'
+    const preview = 'Choose a new password for Acme Co.'
 
     expect(mail.html).toContain(preview)
     for (const codePoint of ZERO_WIDTH) {

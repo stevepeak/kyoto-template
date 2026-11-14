@@ -3,7 +3,7 @@
   // from this package (`db:migrate`, `db:migrate:local`). The web and
   // workflows Workers bind the same database as `DB` in their own configs.
   "$schema": "../../node_modules/wrangler/config-schema.json",
-  "name": "kyoto-db-migrations",
+  "name": "template-db-migrations",
   // TODO: set your Cloudflare account id (or rely on CLOUDFLARE_ACCOUNT_ID).
   "d1_databases": [
     {
@@ -11,7 +11,7 @@
       // TODO: choose the database name, create it with
       // `bunx wrangler d1 create <name>` (pick a location/jurisdiction), and
       // paste the returned id below and into apps/web + apps/workflows.
-      "database_name": "kyoto-db",
+      "database_name": "template-db",
       "database_id": "00000000-0000-0000-0000-000000000000",
       "migrations_dir": "./migrations",
     },

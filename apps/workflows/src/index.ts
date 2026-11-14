@@ -245,7 +245,7 @@ export default class WorkflowsService
     }
 
     if (url.pathname === '/' || url.pathname === '/health') {
-      return Response.json({ ok: true, service: 'kyoto-workflows' })
+      return Response.json({ ok: true, service: 'template-workflows' })
     }
 
     return new Response('not found', { status: 404 })
@@ -261,7 +261,7 @@ export default class WorkflowsService
 
   /** Queue consumer — runs once per batch. */
   override async queue(batch: MessageBatch<unknown>): Promise<void> {
-    if (batch.queue === 'kyoto-notifications') {
+    if (batch.queue === 'template-notifications') {
       await handleNotificationsBatch(batch, this.env)
     }
   }

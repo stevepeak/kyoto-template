@@ -23,7 +23,7 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@kyoto/eslint-config": "workspace:*",
+    "@app/eslint-config": "workspace:*",
     "@react-email/ui": "6.11.13",
     "@types/bun": "catalog:",
     "@types/react": "catalog:",

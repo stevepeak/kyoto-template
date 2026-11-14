@@ -1,5 +1,5 @@
 // Imported by relative path on purpose: this is the same file every workspace
-// gets via `@kyoto/eslint-config`, and the root has no dependency edge to it.
+// gets via `@app/eslint-config`, and the root has no dependency edge to it.
 import { config } from './config/eslint/server.js'
 
 /**

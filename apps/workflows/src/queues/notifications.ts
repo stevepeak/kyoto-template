@@ -6,7 +6,7 @@
  * dead-letter queue.
  *
  * To trigger one locally:
- *   curl -X POST http://localhost:8787/__queues/kyoto-notifications \
+ *   curl -X POST http://localhost:8787/__queues/template-notifications \
  *     -H 'content-type: application/json' \
  *     -d '{"messages":[{"body":{"kind":"email","to":"a@b.c","subject":"hi"}}]}'
  */

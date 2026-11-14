@@ -49,21 +49,6 @@ local_resource(
 )
 
 local_resource(
-    name='Storybook',
-    labels=["Development"],
-    serve_cmd="bun run --cwd apps/web storybook",
-    links=[ link("http://localhost:6006/", "Storybook") ],
-)
-
-cmd_button(
-    name="btn-storybook-kill",
-    resource="Storybook",
-    icon_name="terminal",
-    text="Kill Port",
-    argv=["sh", "-c", "lsof -i :6006 -t | xargs kill"],
-)
-
-local_resource(
     name='D1 Migrate (local)',
     labels=["Development"],
     cmd="bun run db:migrate:local",

@@ -10,7 +10,7 @@ const config: KnipConfig = {
       ignore: ['tailwind.config.js'],
     },
     'apps/web': {
-      entry: ['app/**/*.{ts,tsx}', 'open-next.config.ts'],
+      entry: ['app/**/*.{ts,tsx}', 'open-next.config.ts', 'scripts/*.ts'],
       project: ['**/*.{ts,tsx}'],
       // Loaded via `@plugin` in globals.css, which knip doesn't follow.
       ignoreDependencies: ['@tailwindcss/typography'],

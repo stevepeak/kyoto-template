@@ -1,4 +1,4 @@
-import { config } from '@kyoto/eslint-config/bun.js'
+import { config } from '@app/eslint-config/bun.js'
 
 /**
  * Worker-only imports. The web app runs on Next.js (OpenNext) where
@@ -73,7 +73,6 @@ export default [
     ignores: [
       '.next/**',
       '.open-next/**',
-      '.storybook/**',
       'components/ui/**',
       'next.config.js',
       'postcss.config.cjs',
