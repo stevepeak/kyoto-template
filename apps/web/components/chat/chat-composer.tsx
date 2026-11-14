@@ -76,7 +76,7 @@ export function ChatComposer({ onSend, onTyping }: ChatComposerProps) {
           type="button"
           onClick={() => void submit()}
           disabled={!value.trim() || isSending}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity hover:bg-primary-hover disabled:opacity-30"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30 disabled:hover:bg-transparent"
           aria-label="Send"
           title="Enter to send"
         >

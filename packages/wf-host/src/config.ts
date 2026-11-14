@@ -1,5 +1,10 @@
 import { defineWfConfig } from '@stevepeak/007'
 
+import {
+  getDecider,
+  listDecisionModels,
+  listDecisionProviders,
+} from './decider'
 import { buildRunDeps, type HostDeps } from './deps'
 import type { HostEnv } from './env'
 import {
@@ -25,6 +30,11 @@ export const wfConfig = defineWfConfig<HostDeps>({
   listProviders,
   fetchModelCatalog,
   fetchProviderBudget,
+  // The SECOND kind of provider — TypeSafe's Jev on OpenRouter's Decisions API.
+  // All three or none; `defineWfConfig` refuses a partial set. See `decider.ts`.
+  getDecider,
+  listDecisionModels,
+  listDecisionProviders,
   toolRegistry,
   triggers,
   buildRunDeps,
