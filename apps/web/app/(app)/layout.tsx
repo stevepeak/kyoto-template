@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 
 import { AppShell } from '@/components/app-shell/app-shell'
 import { getAuth } from '@/lib/auth'
+import { getSetupChecklist } from '@/lib/setup-checklist'
 import { canUseWorkflows } from '@/lib/wf-access'
 
 // Reads the session (and the 007 allowlist binding) per request.
@@ -21,11 +22,21 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         image: session.user.image ?? null,
       }
     : null
+  const isAdmin = canUseWorkflows(user?.email)
+  const checklist = isAdmin ? getSetupChecklist() : []
 
   return (
     <AppShell
       initialUser={user}
-      isAdmin={canUseWorkflows(user?.email)}
+      isAdmin={isAdmin}
+      setupProgress={
+        isAdmin
+          ? {
+              done: checklist.filter((item) => item.done).length,
+              total: checklist.length,
+            }
+          : null
+      }
       isImpersonating={Boolean(session?.session.impersonatedBy)}
     >
       {children}

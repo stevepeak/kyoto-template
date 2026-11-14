@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { type ReactNode, useState } from 'react'
 
+import { ChatWidget } from '@/components/chat/chat-widget'
 import { CommandPalette, ShortcutHint } from '@/components/command-palette'
 import { SiteFooter } from '@/components/site-footer'
 import { authClient } from '@/lib/auth-client'
@@ -18,14 +19,60 @@ function isActive(pathname: string, href: string): boolean {
   return href === '/' ? pathname === '/' : pathname.startsWith(href)
 }
 
+type SetupProgress = { done: number; total: number }
+
+/** A small ring that fills as setup items get done. */
+function ProgressCircle({ done, total }: SetupProgress) {
+  const radius = 6
+  const circumference = 2 * Math.PI * radius
+  const fraction = total === 0 ? 1 : done / total
+  return (
+    <span
+      className="ml-auto flex items-center gap-1 text-xs text-gray-400"
+      title={`${done} of ${total} done`}
+    >
+      <svg
+        viewBox="0 0 16 16"
+        className="h-4 w-4 -rotate-90"
+        aria-hidden="true"
+      >
+        <circle
+          cx="8"
+          cy="8"
+          r={radius}
+          fill="none"
+          strokeWidth="2"
+          className="stroke-gray-200"
+        />
+        <circle
+          cx="8"
+          cy="8"
+          r={radius}
+          fill="none"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference * (1 - fraction)}
+          className={fraction === 1 ? 'stroke-green-500' : 'stroke-gray-900'}
+        />
+      </svg>
+      <span className="sr-only">
+        {done} of {total} done
+      </span>
+    </span>
+  )
+}
+
 function NavLink({
   item: { href, label, icon: Icon },
   active,
   onNavigate,
+  trailing,
 }: {
   item: NavItem
   active: boolean
   onNavigate: () => void
+  trailing?: ReactNode
 }) {
   return (
     <Link
@@ -40,6 +87,7 @@ function NavLink({
     >
       <Icon className="h-4 w-4" aria-hidden="true" />
       {label}
+      {trailing}
     </Link>
   )
 }
@@ -50,6 +98,8 @@ interface AppShellProps {
   initialUser: AccountUser | null
   /** Show the admin section (emails, 007 console, setup) in the sidebar nav. */
   isAdmin: boolean
+  /** Setup checklist progress, shown on the Setup nav item (admins only). */
+  setupProgress: SetupProgress | null
   /** An admin is signed in as `initialUser` — show the way back. */
   isImpersonating: boolean
 }
@@ -58,6 +108,7 @@ export function AppShell({
   children,
   initialUser,
   isAdmin,
+  setupProgress,
   isImpersonating,
 }: AppShellProps) {
   const pathname = usePathname()
@@ -136,6 +187,11 @@ export function AppShell({
                 item={item}
                 active={isActive(pathname, item.href)}
                 onNavigate={() => setMobileOpen(false)}
+                trailing={
+                  item.href === '/setup' && setupProgress ? (
+                    <ProgressCircle {...setupProgress} />
+                  ) : undefined
+                }
               />
             ))}
           </div>
@@ -185,6 +241,8 @@ export function AppShell({
         </header>
         <div className="min-h-0 flex-1 overflow-auto">{children}</div>
       </div>
+
+      <ChatWidget />
 
       <CommandPalette
         open={paletteOpen}
