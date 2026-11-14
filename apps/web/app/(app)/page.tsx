@@ -4,15 +4,24 @@ import Link from 'next/link'
 
 import { authClient } from '@/lib/auth-client'
 
-import { AuthCard } from '../components/auth-card'
-import { TriggerCard } from '../components/trigger-card'
-
 export default function HomePage() {
   const { data: session, isPending } = authClient.useSession()
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-8 p-8">
-      <h1 className="text-4xl font-bold">Hello World</h1>
+      <svg
+        viewBox="0 0 64 64"
+        className="text-muted-foreground size-24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        aria-hidden="true"
+      >
+        <rect x="6" y="6" width="22" height="30" rx="3" />
+        <rect x="36" y="6" width="22" height="16" rx="3" />
+        <rect x="6" y="42" width="22" height="16" rx="3" />
+        <rect x="36" y="28" width="22" height="30" rx="3" />
+      </svg>
       {!isPending && !session && (
         <Link
           href="/login"
@@ -20,12 +29,6 @@ export default function HomePage() {
         >
           Sign in
         </Link>
-      )}
-      {session && (
-        <div className="flex flex-col gap-6 md:flex-row md:items-start">
-          <AuthCard />
-          <TriggerCard />
-        </div>
       )}
     </main>
   )

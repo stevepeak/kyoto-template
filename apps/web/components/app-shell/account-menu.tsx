@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronsUpDown, LogOut, Workflow } from 'lucide-react'
+import { ChevronsUpDown, LogOut, Settings, Workflow } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
@@ -100,6 +100,17 @@ export function AccountMenu({ user, canUseWorkflows }: AccountMenuProps) {
             <Avatar user={user} />
             <UserLabel user={user} />
           </div>
+
+          <div className="my-1 h-px bg-gray-200" />
+          <Link
+            href="/settings"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className={itemClass}
+          >
+            <Settings className="h-4 w-4" aria-hidden="true" />
+            Settings
+          </Link>
 
           {canUseWorkflows && (
             <>
