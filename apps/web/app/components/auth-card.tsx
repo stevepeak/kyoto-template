@@ -1,7 +1,7 @@
 'use client'
 
 import { Fingerprint } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { type FormEvent, useCallback, useEffect, useState } from 'react'
 
 import { authClient } from '@/lib/auth-client'
 
@@ -55,7 +55,17 @@ function inferDeviceName(): string {
   return browser || platform || 'Passkey'
 }
 
-export function AuthCard() {
+interface AuthCardProps {
+  /** Show "Continue with Google" — only when the provider is configured. */
+  googleEnabled?: boolean
+  /** Where to land after an OAuth round-trip. */
+  callbackURL?: string
+}
+
+export function AuthCard({
+  googleEnabled = false,
+  callbackURL = '/',
+}: AuthCardProps) {
   const [mode, setMode] = useState<AuthMode>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -78,19 +88,24 @@ export function AuthCard() {
     setPasskeys(data ?? [])
   }, [])
 
+  const userId = session?.user.id
   useEffect(() => {
-    if (session) {
-      void refreshPasskeys()
-    } else {
-      setPasskeys(null)
+    if (!userId) return
+    let cancelled = false
+    void authClient.passkey.listUserPasskeys().then(({ data, error }) => {
+      if (cancelled) return
+      if (error) {
+        setError(error.message || 'Failed to load passkeys')
+        return
+      }
+      setPasskeys(data ?? [])
+    })
+    return () => {
+      cancelled = true
     }
-  }, [session, refreshPasskeys])
+  }, [userId])
 
-  useEffect(() => {
-    setPasskeyName((current) => current || inferDeviceName())
-  }, [])
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
@@ -134,19 +149,34 @@ export function AuthCard() {
     setIsLoading(false)
   }
 
-  const handleAddPasskey = async (e: React.FormEvent) => {
+  const handleGoogleSignIn = async () => {
+    setError(null)
+    setSuccess(null)
+    setIsLoading(true)
+    const { error } = await authClient.signIn.social({
+      provider: 'google',
+      callbackURL,
+      errorCallbackURL: '/login',
+    })
+    if (error) {
+      setError(error.message || 'Failed to sign in with Google')
+      setIsLoading(false)
+    }
+  }
+
+  const handleAddPasskey = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
     setSuccess(null)
     setIsLoading(true)
     const { error } = await authClient.passkey.addPasskey({
-      name: passkeyName.trim() || undefined,
+      name: passkeyName.trim() || inferDeviceName(),
     })
     if (error) {
       setError(error.message || 'Failed to add passkey')
     } else {
       setSuccess('Passkey added')
-      setPasskeyName(inferDeviceName())
+      setPasskeyName('')
       await refreshPasskeys()
     }
     setIsLoading(false)
@@ -217,7 +247,7 @@ export function AuthCard() {
               type="text"
               value={passkeyName}
               onChange={(e) => setPasskeyName(e.target.value)}
-              placeholder="Passkey name (optional)"
+              placeholder="Passkey name (defaults to this device)"
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
             />
             <button
@@ -271,6 +301,16 @@ export function AuthCard() {
             <Fingerprint className="h-4 w-4" aria-hidden="true" />
             Sign in with passkey
           </button>
+          {googleEnabled && (
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={isLoading}
+              className="mb-3 flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-50"
+            >
+              Continue with Google
+            </button>
+          )}
           <div className="mb-3 flex items-center gap-2 text-xs text-gray-400">
             <div className="h-px flex-1 bg-gray-200" />
             <span>or</span>

@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "target": "ES2023",
+    "lib": ["DOM", "DOM.Iterable", "ES2023"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -18,7 +18,7 @@
         "name": "next"
       }
     ],
-    "types": ["node"],
+    "types": ["bun", "node", "@cloudflare/workers-types"],
     "paths": {
       "@/*": ["./*"]
     }

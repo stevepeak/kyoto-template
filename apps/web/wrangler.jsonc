@@ -1,8 +1,9 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "main": ".open-next/worker.js",
+  // TODO: choose the Worker name (and keep apps/workflows' service binding in sync).
   "name": "kyoto-web",
-  "compatibility_date": "2025-01-15",
+  "compatibility_date": "2025-08-16",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
     "directory": ".open-next/assets",
@@ -11,9 +12,45 @@
   "observability": {
     "enabled": true,
   },
+  // TODO: custom domain — `"routes": [{ "pattern": "app.example.com", "custom_domain": true }]`.
 
   // Service binding to the workflows worker. Wrangler routes RPC calls
   // between the two workers in `wrangler dev`; in prod, both workers must
   // be deployed in the same Cloudflare account.
   "services": [{ "binding": "WORKFLOWS", "service": "kyoto-workflows" }],
+
+  // D1 — no `migrations_dir` here; this Worker never migrates. App migrations
+  // run from packages/db, 007's from apps/workflows.
+  // TODO: create both databases (`bunx wrangler d1 create <name>`) and paste the ids.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "kyoto-db",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+    },
+    {
+      "binding": "WF_DB",
+      "database_name": "kyoto-wf",
+      "database_id": "00000000-0000-0000-0000-000000000001",
+    },
+  ],
+
+  // Cloudflare Email Sending. No local simulator: in dev, sends are logged.
+  // TODO: onboard the sending domain and set the allowed sender(s).
+  "send_email": [
+    {
+      "name": "EMAIL",
+      "allowed_sender_addresses": ["noreply@example.com"],
+    },
+  ],
+
+  // Vars (non-secret). Secrets: `wrangler secret put BETTER_AUTH_SECRET`,
+  // `GOOGLE_CLIENT_SECRET`, `OPENROUTER_API_KEY`, `WF_CONNECTOR_KEY`.
+  // TODO: fill in production values.
+  "vars": {
+    "APP_URL": "",
+    "GOOGLE_CLIENT_ID": "",
+    "EMAIL_FROM": "",
+    "EMAIL_FROM_NAME": "",
+  },
 }

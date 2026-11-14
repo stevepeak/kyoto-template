@@ -1,9 +1,21 @@
 import { workflowInputs } from '@app/workflows-client'
 import { z } from 'zod'
 
-import { publicProcedure, router } from './trpc'
+import {
+  createCallerFactory,
+  protectedProcedure,
+  publicProcedure,
+  router,
+} from './trpc'
 
-export type { Context } from './context'
+export type { Context, SessionUser } from './context'
+
+const meRouter = router({
+  /** The signed-in user. Also backs the MCP `whoami` tool. */
+  whoami: protectedProcedure.query(({ ctx }) => {
+    return { user: ctx.user }
+  }),
+})
 
 const helloRouter = router({
   world: publicProcedure
@@ -31,6 +43,7 @@ const workflowsRouter = router({
 })
 
 export const appRouter = router({
+  me: meRouter,
   hello: helloRouter,
   workflows: workflowsRouter,
 })
@@ -38,3 +51,6 @@ export const appRouter = router({
 // Export type router type signature,
 // NOT the router itself.
 export type AppRouter = typeof appRouter
+
+/** Server-side caller (route handlers, the app MCP). */
+export const createCaller = createCallerFactory(appRouter)

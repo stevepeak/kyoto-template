@@ -47,6 +47,6 @@ class HttpWorkflowsClient implements WorkflowsRpc {
     if (!res.ok) {
       throw new Error(`workflows worker returned ${res.status}`)
     }
-    return (await res.json()) as StartRunResult
+    return await res.json<StartRunResult>()
   }
 }

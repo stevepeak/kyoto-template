@@ -27,7 +27,7 @@ tmp/
 next-env.d.ts
 *storybook.log
 storybook-static
-.postgres-data
-.postgres
 .wrangler
+.open-next
+.wf-migrate.env
 .dev.vars

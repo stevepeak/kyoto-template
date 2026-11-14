@@ -2,32 +2,41 @@
   "name": "@app/db",
   "type": "module",
   "version": "0.0.1",
-  "description": "Drizzle ORM database package for web2 app",
+  "private": true,
+  "description": "Drizzle ORM over Cloudflare D1",
   "main": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./schema": "./src/schema.ts"
+    "./local-d1": "./src/local-d1.ts",
+    "./schema": "./src/schema.ts",
+    "./testing": "./src/testing.ts"
   },
   "scripts": {
     "clean": "rm -rf node_modules dist",
-    "db:generate": "bun --env-file=../../.env drizzle-kit generate",
-    "db:migrate": "bun --env-file=../../.env run src/migrate.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply kyoto-db --local --persist-to ../../.wrangler/state",
+    "db:migrate": "wrangler d1 migrations apply kyoto-db --remote",
     "db:studio": "bun --env-file=../../.env drizzle-kit studio",
-    "db:push": "bun --env-file=../../.env drizzle-kit push",
-    "db:drop": "bun --env-file=../../.env drizzle-kit drop",
+    "db:studio:local": "drizzle-kit studio --config drizzle.config.local.ts",
+    "test": "bun test",
     "typecheck": "tsc --noEmit",
     "lint": "eslint --ignore-pattern='./migrations/' . && prettier --ignore-path='../../.prettierignore' --check .",
     "fix": "eslint --fix --quiet --ignore-pattern='./migrations/' . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
   },
   "dependencies": {
     "drizzle-orm": "catalog:",
-    "postgres": "^4.1.1"
+    "zod": "catalog:"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "catalog:",
     "@kyoto/eslint-config": "workspace:*",
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/bun": "catalog:",
     "@types/node": "catalog:",
+    "better-sqlite3": "^13.1.1",
     "drizzle-kit": "^0.31.11",
     "tsconfig": "workspace:*",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "wrangler": "catalog:"
   }
 }

@@ -16,7 +16,8 @@
     "fix": "eslint --fix --quiet --ignore-pattern='.next' . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write .",
     "typecheck": "tsc --noEmit",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "test": "bun test"
   },
   "dependencies": {
     "@app/api": "workspace:*",
@@ -33,13 +34,16 @@
     "posthog-js": "catalog:",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "sonner": "^2.0.8"
+    "sonner": "^2.0.8",
+    "@app/config": "workspace:*",
+    "@better-auth/mcp": "^1.7.23",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^5.6.0",
     "@kyoto/eslint-config": "workspace:*",
     "@opennextjs/cloudflare": "^1.20.17",
-    "wrangler": "^4.162.0",
+    "wrangler": "catalog:",
     "@storybook/addon-a11y": "^10.6.7",
     "@storybook/addon-docs": "^10.6.7",
     "@storybook/addon-onboarding": "^10.6.7",
@@ -57,6 +61,8 @@
     "tailwindcss": "^4.3.5",
     "typescript": "catalog:",
     "vite": "^8.0.13",
-    "vitest": "5.1.0"
+    "vitest": "5.1.0",
+    "@cloudflare/workers-types": "catalog:",
+    "@types/bun": "catalog:"
   }
 }

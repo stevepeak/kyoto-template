@@ -13,10 +13,6 @@
     ],
     "catalog": {
       "@openrouter/ai-sdk-provider": "^3.1.0",
-      "@opentelemetry/api": "^1.9.1",
-      "@opentelemetry/sdk-node": "^0.218.0",
-      "@sentry/node": "^10.53.1",
-      "@sentry/opentelemetry": "^10.53.1",
       "@tanstack/react-query": "^5.107.1",
       "@trpc/client": "^11.28.2",
       "@trpc/react-query": "^11.28.2",
@@ -25,11 +21,13 @@
       "ai": "^7.0.173",
       "drizzle-orm": "^0.45.4",
       "eslint": "^10.15.0",
-      "import-in-the-middle": "^3.0.1",
       "posthog-js": "^1.449.2",
       "posthog-node": "^5.73.1",
       "typescript": "npm:@typescript/typescript6@^6.0.2",
-      "zod": "^4.6.7"
+      "zod": "^4.6.7",
+      "@cloudflare/workers-types": "^5.20261114.1",
+      "@types/bun": "^1.4.4",
+      "wrangler": "^4.162.0"
     }
   },
   "scripts": {
@@ -46,7 +44,9 @@
     "ci": "bun run typecheck && bun run lint && bun run knip && bun run build",
     "fix": "turbo run fix",
     "clean": "turbo run clean | rm -rf .turbo",
-    "kill": "&& lsof -i :3000 -t | xargs -r kill && lsof -i :3001 -t | xargs -r kill && lsof -i :6006 -t | xargs -r kill"
+    "kill": "&& lsof -i :3000 -t | xargs -r kill && lsof -i :3001 -t | xargs -r kill && lsof -i :6006 -t | xargs -r kill",
+    "db:migrate": "bun run --cwd packages/db db:migrate",
+    "db:migrate:local": "bun run --cwd packages/db db:migrate:local"
   },
   "devDependencies": {
     "eslint": "^10.4.0",
@@ -66,5 +66,11 @@
   "packageManager": "bun@1.4.3",
   "engines": {
     "bun": "1"
-  }
+  },
+  "trustedDependencies": [
+    "better-sqlite3",
+    "esbuild",
+    "sharp",
+    "workerd"
+  ]
 }

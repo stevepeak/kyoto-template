@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Cloudflare Workflows / Queues / Durable Objects worker — replaces Trigger.dev",
+  "description": "Cloudflare Workflows / Queues / Durable Objects worker \u2014 replaces Trigger.dev",
   "main": "src/index.ts",
   "exports": {
     ".": "./src/index.ts"
@@ -39,6 +39,7 @@
     "@types/node": "catalog:",
     "tsconfig": "workspace:*",
     "typescript": "catalog:",
-    "wrangler": "^4.162.0"
+    "wrangler": "^4.162.0",
+    "@types/bun": "catalog:"
   }
 }

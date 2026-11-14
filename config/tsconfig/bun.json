@@ -5,13 +5,17 @@
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "bundler",
+    // Every package here runs on Bun and its tests import `bun:test`.
+    // A package that sets its own `types` replaces this list.
+    "types": ["bun"],
     "experimentalDecorators": true,
     "noFallthroughCasesInSwitch": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
     "noImplicitThis": true,
     "noPropertyAccessFromIndexSignature": false,
+    // TODO: decide whether to turn this on (stricter, but every `arr[i]` needs a guard).
     "noUncheckedIndexedAccess": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true

@@ -17,7 +17,8 @@
     "@kyoto/eslint-config": "workspace:*",
     "@types/node": "catalog:",
     "tsconfig": "workspace:*",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "@types/bun": "catalog:"
   },
   "dependencies": {
     "@sindresorhus/is": "^8.1.0",

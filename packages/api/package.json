@@ -12,17 +12,21 @@
     "clean": "rm -rf node_modules dist",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "fix": "eslint --fix --quiet ."
+    "fix": "eslint --fix --quiet .",
+    "test": "bun test"
   },
   "dependencies": {
     "@app/workflows-client": "workspace:*",
     "@trpc/server": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "@app/db": "workspace:*"
   },
   "devDependencies": {
     "@kyoto/eslint-config": "workspace:*",
     "@types/node": "catalog:",
     "tsconfig": "workspace:*",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "@cloudflare/workers-types": "catalog:",
+    "@types/bun": "catalog:"
   }
 }

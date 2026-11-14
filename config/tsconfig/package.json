@@ -7,7 +7,8 @@
   ],
   "devDependencies": {
     "@dexaai/config": "^0.0.10",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "@types/bun": "catalog:"
   },
   "publishConfig": {
     "access": "public"

@@ -19,6 +19,9 @@ function getPostHogClient(): PostHogClient | null {
 
   try {
     const env = getConfig()
+    if (!env.POSTHOG_API_KEY) {
+      return null
+    }
     posthogClient = new PostHogClient(env.POSTHOG_API_KEY, {
       host: env.POSTHOG_HOST,
     })
