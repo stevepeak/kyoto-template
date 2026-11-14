@@ -80,6 +80,7 @@
     "EMAIL_FROM": "",
     "EMAIL_FROM_NAME": "",
     "POSTHOG_HOST": "https://us.i.posthog.com",
+    "WF_ADMIN_EMAILS": "steve@stevepeak.net",
   },
 
   // ── Staging: PR preview deploys (.github/workflows/ci.yml `preview`) ──────
