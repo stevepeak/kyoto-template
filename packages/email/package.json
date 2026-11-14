@@ -24,11 +24,11 @@
   },
   "devDependencies": {
     "@kyoto/eslint-config": "workspace:*",
-    "@react-email/ui": "6.11.11",
+    "@react-email/ui": "6.11.13",
     "@types/bun": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "react-email": "6.11.11",
+    "react-email": "6.11.13",
     "tsconfig": "workspace:*",
     "typescript": "catalog:"
   }
