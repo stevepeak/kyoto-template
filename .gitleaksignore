@@ -1,0 +1,4 @@
+# Reviewed gitleaks findings that are not secrets.
+# One fingerprint per line: <commit>:<file>:<rule>:<line>. Say why above each.
+# docs placeholder: Bearer YOUR_API_KEY
+676eea76569de915f204a124f72cd65c1c568671:.cursor/rules/mint.mdc:curl-auth-header:113

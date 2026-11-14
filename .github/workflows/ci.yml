@@ -14,48 +14,127 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - uses: ./.github/actions/setup
+      # Turborepo replays the workspaces a PR did not touch instead of
+      # re-running them. Keyed per job: `lint` and `typecheck` cache different
+      # task hashes and must not overwrite each other's entry.
+      - name: Restore turbo cache
+        uses: actions/cache@v6
+        with:
+          path: .turbo/cache
+          key: turbo-${{ github.job }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ github.job }}-
+      # Type-aware ESLint can outgrow Node's default ~2 GB heap on a cold cache.
       - run: bun run lint
+        timeout-minutes: 6
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+      # A binding or var in a wrangler.jsonc missing from that Worker's
+      # hand-written env type — typechecks clean, `undefined` at runtime.
+      - run: bun run check:bindings
+        timeout-minutes: 2.5
+      # Every /api route handler is wrapped in an auth factory or listed in the
+      # script's UNWRAPPED_API_ROUTES with a reason.
+      - run: bun run check:api-auth
+        timeout-minutes: 2.5
+      # 007 (a public repo) carries no key material and its CI can't hand
+      # secrets to fork PRs.
+      - run: bun run check:security
+        timeout-minutes: 2.5
+      # packages/007's standalone bun.lock drifting from its package.json is
+      # invisible here (the root install never reads it) and fatal in 007's CI.
       - run: bun run check:007-lockfile
+        timeout-minutes: 2.5
+
+  # No secret anywhere in either repo's history. Reviewed false positives live
+  # in .gitleaksignore. Pinned image rather than the action, which also scans
+  # the 007 submodule's own history.
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - name: Fetch 007 history
+        run: git -C packages/007 fetch --unshallow || true
+        timeout-minutes: 2.5
+      - name: gitleaks (parent repo)
+        run: docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.30.1 git --no-banner --redact /repo
+        timeout-minutes: 2.5
+      - name: gitleaks (007 submodule)
+        run: docker run --rm -v "$PWD/packages/007:/repo" zricethezav/gitleaks:v8.30.1 git --no-banner --redact /repo
+        timeout-minutes: 2.5
 
   typecheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - uses: ./.github/actions/setup
+      # See the lint job.
+      - name: Restore turbo cache
+        uses: actions/cache@v6
+        with:
+          path: .turbo/cache
+          key: turbo-${{ github.job }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ github.job }}-
       - run: bun run typecheck
+        timeout-minutes: 6
 
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - uses: ./.github/actions/setup
       - run: bun run test
+        timeout-minutes: 2.5
 
   knip:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - uses: ./.github/actions/setup
       - run: bun run knip
+        timeout-minutes: 2.5
 
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - uses: ./.github/actions/setup
+      # Next.js logs "No build cache found" without this and recompiles every
+      # module from scratch. Keyed per commit, restored from the newest prior one.
+      - name: Restore Next.js build cache
+        uses: actions/cache@v6
+        with:
+          path: apps/web/.next/cache
+          key: nextjs-${{ hashFiles('bun.lock') }}-${{ github.sha }}
+          restore-keys: |
+            nextjs-${{ hashFiles('bun.lock') }}-
+            nextjs-
       - run: bun run build
+        timeout-minutes: 10
+      # The client assets carry no key material and not the value of a server
+      # secret this step holds (skipped while the secret is unset).
+      - name: Scan client bundle for secrets
+        env:
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          BUNDLE_SECRET_ENV: BETTER_AUTH_SECRET
+        run: bun scripts/check-security-static.ts --bundle apps/web/.next/static
+        timeout-minutes: 2.5
 
   # ── Deploy (main only) ──────────────────────────────────────────────────────
   # TODO: set repo secrets CLOUDFLARE_API_TOKEN (D1:Edit + Workers Scripts:Edit)
@@ -67,14 +146,14 @@ jobs:
 
   deploy-migrations:
     name: Deploy D1 migrations
-    needs: [lint, typecheck, test, knip, build]
+    needs: [lint, secrets, typecheck, test, knip, build]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - uses: ./.github/actions/setup
@@ -92,7 +171,7 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - uses: ./.github/actions/setup
@@ -108,7 +187,7 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - uses: ./.github/actions/setup
@@ -137,7 +216,7 @@ jobs:
   # Fork PRs get no secrets, so they're skipped.
   preview:
     name: Preview deploy
-    needs: [lint, typecheck, test, knip, build]
+    needs: [lint, secrets, typecheck, test, knip, build]
     if: >-
       github.event_name == 'pull_request' &&
       vars.PREVIEW_DEPLOYS == 'true' &&
@@ -156,7 +235,7 @@ jobs:
       PREVIEW_ALIAS: pr-${{ github.event.number }}
       PREVIEW_URL: https://pr-${{ github.event.number }}-template-web-staging.${{ vars.CF_WORKERS_SUBDOMAIN }}.workers.dev
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - uses: ./.github/actions/setup

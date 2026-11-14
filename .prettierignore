@@ -28,3 +28,6 @@ packages/db/migrations
 packages/007
 .open-next
 .react-email
+
+# local-only Claude Code settings (untracked)
+.claude/settings.local.json
