@@ -137,9 +137,10 @@ jobs:
         timeout-minutes: 2.5
 
   # ── Deploy (main only) ──────────────────────────────────────────────────────
-  # TODO: set repo secrets CLOUDFLARE_API_TOKEN (D1:Edit + Workers Scripts:Edit)
-  # and CLOUDFLARE_ACCOUNT_ID, create the D1 databases, and fill the
-  # database_ids in the wrangler.jsonc files before enabling deploys.
+  # Opt-in: set the repo VARIABLE `DEPLOY=true` once deploys can succeed — repo
+  # secrets CLOUDFLARE_API_TOKEN (D1:Edit + Workers Scripts:Edit) and
+  # CLOUDFLARE_ACCOUNT_ID set, the D1 databases created, and the database_ids in
+  # the wrangler.jsonc files filled (`/setup`). Until then main runs checks only.
   #
   # Migrations use `bunx wrangler` rather than cloudflare/wrangler-action: the
   # action runs `npm i`, and npm cannot parse `workspace:*`.
@@ -147,7 +148,7 @@ jobs:
   deploy-migrations:
     name: Deploy D1 migrations
     needs: [lint, secrets, typecheck, test, knip, build]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY == 'true'
     runs-on: ubuntu-latest
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -165,7 +166,7 @@ jobs:
   deploy-workers:
     name: Deploy workflows worker
     needs: [deploy-migrations]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY == 'true'
     runs-on: ubuntu-latest
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -181,7 +182,7 @@ jobs:
   deploy-web:
     name: Deploy web
     needs: [deploy-workers]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY == 'true'
     runs-on: ubuntu-latest
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

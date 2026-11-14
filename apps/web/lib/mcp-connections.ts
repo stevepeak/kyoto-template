@@ -47,7 +47,7 @@ const VENDOR_HOSTS: Record<string, McpClientVendor> = {
  * their redirect URI, local ones (Claude Code, Codex — loopback redirects) by
  * name.
  */
-export function clientVendor(
+function clientVendor(
   name: string | null,
   redirectUris: unknown,
 ): McpClientVendor | null {
@@ -59,6 +59,6 @@ export function clientVendor(
     }
   }
   if (name && /\bclaude\b/i.test(name)) return 'claude'
-  if (name && /\b(chatgpt|openai|codex)\b/i.test(name)) return 'openai'
+  if (name && /\b(?:chatgpt|openai|codex)\b/i.test(name)) return 'openai'
   return null
 }
