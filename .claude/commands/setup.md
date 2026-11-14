@@ -83,6 +83,11 @@ Create what's missing, then paste ids back:
   `extract_text` reads it, `create_document` writes to it).
 - **Vectorize** — the documents index (dimensions must match BGE-M3):
   `wrangler vectorize create <prefix>-documents --dimensions=1024 --metric=cosine`.
+  Then drop the `TODO: create the index once` comment in
+  `apps/workflows/wrangler.jsonc`. Tell them it's bound `remote: true` (no
+  local simulator), so documents indexed from `wrangler dev` / `next dev` land
+  in this real index — runs are kept apart by namespace (the run's `scopeId`),
+  not by environment.
 - Workers AI and Browser Rendering need nothing created — both are bound
   `remote: true`, so `wrangler dev` uses the account's real ones (needs
   `wrangler login`).

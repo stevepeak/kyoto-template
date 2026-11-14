@@ -1,9 +1,9 @@
 'use client'
 
-import { Menu, PanelLeftClose, PanelLeftOpen, Search, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Menu, Search, X } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { type ReactNode, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 
 import { ChatWidget } from '@/components/chat/chat-widget'
 import { CommandPalette, ShortcutHint } from '@/components/command-palette'
@@ -12,6 +12,7 @@ import { authClient } from '@/lib/auth-client'
 import { PRODUCT_NAME } from '@/lib/brand'
 
 import { AccountMenu, type AccountUser } from './account-menu'
+import { AppLogo } from './app-logo'
 import { ImpersonationBanner } from './impersonation-banner'
 import {
   ADMIN_NAV_ITEMS,
@@ -136,6 +137,18 @@ export function AppShell({
     setCollapsed(next)
     document.cookie = `${SIDEBAR_COLLAPSED_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`
   }
+
+  // ⌘S / Ctrl+S toggles the desktop sidebar (overrides the browser's "Save page").
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === 's' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        toggleCollapsed()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  })
   const [paletteOpen, setPaletteOpen] = useState(false)
 
   const user: AccountUser | null = session
@@ -165,24 +178,15 @@ export function AppShell({
           isCollapsed ? 'justify-center' : 'justify-between px-4'
         }`}
       >
-        {!isCollapsed && (
-          <Link href="/" className="text-sm font-semibold text-gray-900">
-            {PRODUCT_NAME}
-          </Link>
-        )}
-        <button
-          type="button"
-          onClick={toggleCollapsed}
-          className="hidden rounded-md p-1 text-gray-500 hover:bg-gray-100 md:block"
-          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-sm font-semibold text-gray-900"
+          aria-label={isCollapsed ? PRODUCT_NAME : undefined}
+          title={isCollapsed ? PRODUCT_NAME : undefined}
         >
-          {isCollapsed ? (
-            <PanelLeftOpen className="h-4 w-4" aria-hidden="true" />
-          ) : (
-            <PanelLeftClose className="h-4 w-4" aria-hidden="true" />
-          )}
-        </button>
+          <AppLogo className="h-7 w-7 shrink-0" />
+          {!isCollapsed && PRODUCT_NAME}
+        </Link>
         <button
           type="button"
           onClick={() => setMobileOpen(false)}
@@ -210,7 +214,7 @@ export function AppShell({
           {!isCollapsed && (
             <>
               <span className="flex-1 text-left">Search…</span>
-              <ShortcutHint />
+              <ShortcutHint keyName="K" />
             </>
           )}
         </button>
@@ -260,11 +264,31 @@ export function AppShell({
   return (
     <div className="flex h-screen">
       <aside
-        className={`hidden shrink-0 border-r border-gray-200 bg-white md:block ${
+        className={`relative hidden shrink-0 border-r border-gray-200 bg-white md:block ${
           collapsed ? 'w-14' : 'w-60'
         }`}
       >
         {renderSidebar(collapsed)}
+        {/* The right border doubles as the collapse toggle. */}
+        <button
+          type="button"
+          onClick={toggleCollapsed}
+          className="group absolute inset-y-0 -right-2 z-10 w-4 cursor-pointer"
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          <span className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-transparent group-hover:bg-gray-400" />
+          <span className="absolute top-1/2 left-1/2 flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 opacity-0 shadow-sm group-hover:opacity-100 group-focus-visible:opacity-100">
+            {collapsed ? (
+              <ChevronRight className="h-3 w-3" aria-hidden="true" />
+            ) : (
+              <ChevronLeft className="h-3 w-3" aria-hidden="true" />
+            )}
+          </span>
+          <ShortcutHint
+            keyName="S"
+            className="pointer-events-none absolute top-1/2 left-full ml-1.5 -translate-y-1/2 bg-white whitespace-nowrap opacity-0 shadow-sm group-hover:opacity-100 group-focus-visible:opacity-100"
+          />
+        </button>
       </aside>
 
       {mobileOpen && (

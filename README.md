@@ -14,7 +14,8 @@ two MCP servers behind OAuth.
 
 | Feature                                                                                                                                                                                                                                     | Where                                                                                                             |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| **Cloudflare everything** — two Workers (web + workflows), D1, Email Sending, Workflows, Durable Objects, Queues                                                                                                                            | `apps/*/wrangler.jsonc`                                                                                           |
+| **Cloudflare everything** — two Workers (web + workflows), D1, R2, Vectorize, Workers AI, Email Sending, Workflows, Durable Objects, Queues                                                                                                 | `apps/*/wrangler.jsonc`                                                                                           |
+| **Document search** — 007's `extract_text` → `index_document` (chunk, embed with Workers AI BGE-M3, upsert to Vectorize, one namespace per run scope) and the `search_documents` agent tool                                                 | `packages/wf-host/src/tools/documents.ts`                                                                         |
 | **D1 + Drizzle** — `createDb(env.DB)`; in-memory `freshDb()` for tests that replays real migrations and enforces D1 limits                                                                                                                  | `packages/db`                                                                                                     |
 | **User accounts** — better-auth, per-request on D1; email/password, **Google** (shown only when configured), **passkeys**; `/login`                                                                                                         | `apps/web/lib/auth.ts`                                                                                            |
 | **Auth hardening** — required email verification, forgot/reset password, active-session list with sign-out, D1-backed rate limits, optional **Turnstile** on sign-up/sign-in/reset                                                          | `apps/web/lib/auth.ts`, `app/(site)/*-password`, `settings/security`                                              |
@@ -111,7 +112,7 @@ with source maps.
 **PR previews** (opt-in): with repo variables `PREVIEW_DEPLOYS=true` and
 `CF_WORKERS_SUBDOMAIN`, each same-repo PR uploads a web version with alias
 `pr-<n>` to the staging Worker (`env.staging` in each wrangler file — its own
-D1s, bucket and queues) and comments the URL. Previews share the staging data
+D1s, buckets, Vectorize index and queues) and comments the URL. Previews share the staging data
 and workflows Worker, and are never indexed. `/setup preview` creates the
 staging resources.
 
@@ -129,6 +130,7 @@ wrapped with Sentry — so `wrangler` needs a `build:cloudflare` first.
 Everything below is a `TODO` in code. Nothing here was decided for you.
 
 - **Cloudflare:** Worker names, D1 database names + ids (×3 wrangler files),
+  R2 bucket and Vectorize index names (`/setup` creates them),
   custom domain, account id, production `vars`.
 - **Auth:** open sign-up? email/password on? may Google create accounts?
   account linking, OTP / magic link, reset- and verification-link lifetimes,

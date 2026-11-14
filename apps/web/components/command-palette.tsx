@@ -29,16 +29,24 @@ export const THEME_OPTIONS: {
 
 const noopSubscribe = () => () => {}
 
-/** `⌘K` on Apple platforms, `Ctrl K` elsewhere (`⌘K` during SSR). */
-export function ShortcutHint() {
+interface ShortcutHintProps {
+  /** The key pressed with ⌘ / Ctrl. */
+  keyName: string
+  className?: string
+}
+
+/** `⌘<key>` on Apple platforms, `Ctrl <key>` elsewhere (`⌘` during SSR). */
+export function ShortcutHint({ keyName, className }: ShortcutHintProps) {
   const isMac = useSyncExternalStore(
     noopSubscribe,
     () => /Mac|iPhone|iPad/.test(navigator.userAgent),
     () => true,
   )
   return (
-    <kbd className="rounded border border-gray-200 px-1.5 font-sans text-[0.6875rem] text-gray-400">
-      {isMac ? '⌘K' : 'Ctrl K'}
+    <kbd
+      className={`rounded border border-gray-200 px-1.5 font-sans text-[0.6875rem] text-gray-400 ${className ?? ''}`}
+    >
+      {isMac ? `⌘${keyName}` : `Ctrl ${keyName}`}
     </kbd>
   )
 }
