@@ -14,32 +14,32 @@
     "dev": "wrangler dev --port 8787 --persist-to ../../.wrangler/state",
     "predev:scheduled": "test -e .dev.vars || ln -sf ../../.env .dev.vars",
     "dev:scheduled": "wrangler dev --port 8787 --persist-to ../../.wrangler/state --test-scheduled",
-    "deploy": "wrangler deploy",
+    "deploy": "wrangler deploy --var \"WF_SDK_RELEASE:$(git rev-parse HEAD:packages/007)\"",
     "tail": "wrangler tail",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv worker-env.d.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . && prettier --ignore-path='../../.prettierignore' --check .",
-    "fix": "eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
+    "fix": "eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write .",
+    "db:migrate:wf:local": "wrangler d1 migrations apply kyoto-wf --local --persist-to ../../.wrangler/state",
+    "db:migrate:wf": "wrangler d1 migrations apply kyoto-wf --remote"
   },
   "dependencies": {
-    "@openrouter/ai-sdk-provider": "catalog:",
     "@app/agents": "workspace:*",
+    "@app/wf-host": "workspace:*",
     "@app/workflows-client": "workspace:*",
-    "@ocavue/eslint-config": "^4.5.7",
+    "@openrouter/ai-sdk-provider": "catalog:",
     "@sentry/cloudflare": "^11.12.0",
+    "@stevepeak/007": "workspace:*",
     "ai": "catalog:",
-    "eslint": "^10.4.0",
-    "knip": "^6.14.1",
-    "lint-staged": "^17.0.5",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20261114.1",
+    "@cloudflare/workers-types": "catalog:",
     "@kyoto/eslint-config": "workspace:*",
+    "@types/bun": "catalog:",
     "@types/node": "catalog:",
     "tsconfig": "workspace:*",
     "typescript": "catalog:",
-    "wrangler": "^4.162.0",
-    "@types/bun": "catalog:"
+    "wrangler": "^4.162.0"
   }
 }

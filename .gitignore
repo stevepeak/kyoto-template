@@ -31,3 +31,6 @@ storybook-static
 .open-next
 .wf-migrate.env
 .dev.vars
+
+# Claude Code agent worktrees
+.claude/worktrees

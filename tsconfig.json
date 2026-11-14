@@ -1,0 +1,9 @@
+{
+  // Root project: only the repo-level scripts. Every workspace has its own.
+  "extends": "./config/tsconfig/bun.json",
+  "compilerOptions": {
+    "types": ["bun", "node"],
+    "noEmit": true
+  },
+  "include": ["scripts/**/*.ts"]
+}

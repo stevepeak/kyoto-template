@@ -1,0 +1,32 @@
+{
+  "name": "@app/wf-host",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Host wiring for the @stevepeak/007 workflow SDK — model provider, tools, triggers, identity",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "clean": "rm -rf node_modules dist",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . && prettier --ignore-path='../../.prettierignore' --check .",
+    "fix": "eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
+  },
+  "dependencies": {
+    "@openrouter/ai-sdk-provider": "catalog:",
+    "@stevepeak/007": "workspace:*",
+    "ai": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "catalog:",
+    "@kyoto/eslint-config": "workspace:*",
+    "@types/bun": "catalog:",
+    "@types/node": "catalog:",
+    "tsconfig": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

@@ -23,3 +23,7 @@ dist-types
 apps/web/components/ui
 next-env.d.ts
 packages/db/migrations
+
+# git submodule — formatted by its own repo
+packages/007
+.open-next

@@ -1,4 +1,6 @@
 @import 'tailwindcss';
+/* 007 workflow console — brings its @source and xyflow CSS (Tailwind v4). */
+@import '@stevepeak/007/ui/styles.css';
 @plugin "@tailwindcss/typography";
 
 @theme inline {

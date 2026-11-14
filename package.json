@@ -25,7 +25,7 @@
       "posthog-node": "^5.73.1",
       "typescript": "npm:@typescript/typescript6@^6.0.2",
       "zod": "^4.6.7",
-      "@cloudflare/workers-types": "^5.20261114.1",
+      "@cloudflare/workers-types": "5.20261112.1",
       "@types/bun": "^1.4.4",
       "wrangler": "^4.162.0"
     }
@@ -36,17 +36,17 @@
     "build": "turbo run build",
     "preview": "turbo run preview",
     "prepare": "husky || true",
-    "lint": "turbo run lint",
-    "typecheck": "turbo run typecheck",
-    "test": "turbo run test",
+    "lint": "turbo run lint --filter=!@stevepeak/007 && eslint .",
+    "typecheck": "turbo run typecheck --filter=!@stevepeak/007",
+    "test": "turbo run test --filter=!@stevepeak/007",
     "knip": "knip",
     "knip:fix": "knip --fix",
-    "ci": "bun run typecheck && bun run lint && bun run knip && bun run build",
-    "fix": "turbo run fix",
+    "ci": "bun run typecheck && bun run lint && bun run test && bun run check:007-lockfile && bun run knip && bun run build",
+    "fix": "turbo run fix --filter=!@stevepeak/007 && eslint --fix --quiet .",
     "clean": "turbo run clean | rm -rf .turbo",
-    "kill": "&& lsof -i :3000 -t | xargs -r kill && lsof -i :3001 -t | xargs -r kill && lsof -i :6006 -t | xargs -r kill",
-    "db:migrate": "bun run --cwd packages/db db:migrate",
-    "db:migrate:local": "bun run --cwd packages/db db:migrate:local"
+    "db:migrate": "bun run --cwd packages/db db:migrate && bun run --cwd apps/workflows db:migrate:wf",
+    "db:migrate:local": "bun run --cwd packages/db db:migrate:local && bun run --cwd apps/workflows db:migrate:wf:local",
+    "check:007-lockfile": "bun scripts/check-007-lockfile.ts"
   },
   "devDependencies": {
     "eslint": "^10.4.0",
@@ -56,7 +56,9 @@
     "prettier": "^3.10.1",
     "turbo": "^2.11.11",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "@typescript/native": "npm:typescript@^7.0.2"
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "@types/bun": "catalog:",
+    "@types/node": "catalog:"
   },
   "lint-staged": {
     "*.{js,ts,tsx,json,md,mdx}": [
@@ -72,5 +74,10 @@
     "esbuild",
     "sharp",
     "workerd"
-  ]
+  ],
+  "overrides": {
+    "prosemirror-model": "1.25.12",
+    "prosemirror-transform": "1.12.2",
+    "prosemirror-view": "1.42.6"
+  }
 }

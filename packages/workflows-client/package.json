@@ -15,17 +15,14 @@
     "fix": "eslint --fix --quiet ."
   },
   "dependencies": {
-    "@ocavue/eslint-config": "^4.24.0",
-    "eslint": "^10.15.0",
-    "knip": "^6.45.1",
-    "lint-staged": "^17.6.0",
+    "@stevepeak/007": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@kyoto/eslint-config": "workspace:*",
+    "@types/bun": "catalog:",
     "@types/node": "catalog:",
     "tsconfig": "workspace:*",
-    "typescript": "catalog:",
-    "@types/bun": "catalog:"
+    "typescript": "catalog:"
   }
 }

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "007": {
+      "type": "http",
+      "url": "http://localhost:3000/api/wf/mcp/write"
+    }
+  }
+}

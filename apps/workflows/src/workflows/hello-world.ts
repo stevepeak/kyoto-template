@@ -15,7 +15,9 @@ export class HelloWorld extends WorkflowEntrypoint<Env, Params> {
     const { runId, ...rest } = event.payload
     const { name = 'World' } = workflowInputs['hello-world'].parse(rest)
 
-    const room = this.env.RUN_ROOM.get(this.env.RUN_ROOM.idFromName(runId))
+    const room = this.env.PROGRESS_ROOM.get(
+      this.env.PROGRESS_ROOM.idFromName(runId),
+    )
 
     await step.do('greet', async () => {
       await room.setStatus('running')

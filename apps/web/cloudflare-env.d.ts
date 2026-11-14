@@ -30,6 +30,11 @@ declare global {
     GOOGLE_CLIENT_SECRET?: string
     OPENROUTER_API_KEY?: string
     WF_CONNECTOR_KEY?: string
+
+    // TODO: see lib/wf-access.ts — who may use the 007 console.
+    WF_ADMIN_EMAILS?: string
+    // Dev-only bearer for the workflows worker HTTP fallback.
+    WORKFLOWS_SHARED_SECRET?: string
   }
 }
 

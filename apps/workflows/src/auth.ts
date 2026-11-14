@@ -5,7 +5,7 @@
  *
  * The web tRPC layer asks the worker to mint a token for a specific runId.
  * The browser then includes it on the SSE/WS endpoint, which the worker
- * verifies before opening the WebSocket to the matching RunRoom DO.
+ * verifies before opening the WebSocket to the matching ProgressRoom DO.
  *
  * No JWT lib needed — Web Crypto handles everything.
  */

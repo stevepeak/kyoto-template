@@ -1,0 +1,9 @@
+{
+  "extends": "tsconfig/bun.json",
+  "compilerOptions": {
+    "types": ["bun", "node", "@cloudflare/workers-types"],
+    "skipLibCheck": true
+  },
+  "include": ["src"],
+  "exclude": ["**/node_modules", "**/.*/"]
+}

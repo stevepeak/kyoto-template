@@ -41,6 +41,8 @@ export default [
       'apps/**',
       'packages/**',
       'config/**',
+      // Agent worktrees and other local tooling state.
+      '.claude/**',
     ],
   },
 ]

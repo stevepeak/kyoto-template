@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "kyoto-workflows",
   "main": "src/index.ts",
-  "compatibility_date": "2025-01-15",
+  "compatibility_date": "2025-08-16",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "observability": {
     "enabled": true,
@@ -31,16 +31,58 @@
       "binding": "NIGHTLY_CLEANUP",
       "class_name": "NightlyCleanup",
     },
+    // 007 — runs authored workflow graphs and eval sweeps.
+    {
+      "name": "graph-workflow",
+      "binding": "GRAPH_WORKFLOW",
+      "class_name": "GraphWorkflow",
+    },
+    {
+      "name": "eval-sweep-workflow",
+      "binding": "EVAL_SWEEP_WORKFLOW",
+      "class_name": "EvalSweepWorkflow",
+    },
   ],
 
-  // Durable Object — holds per-run progress + WebSocket fan-out.
+  // Durable Objects — per-run progress + WebSocket fan-out.
+  //   PROGRESS_ROOM  the example workflows' room (src/durable-objects)
+  //   RUN_ROOM       007's room (name fixed by the SDK's binding contract)
   "durable_objects": {
-    "bindings": [{ "name": "RUN_ROOM", "class_name": "RunRoom" }],
+    "bindings": [
+      { "name": "PROGRESS_ROOM", "class_name": "ProgressRoom" },
+      { "name": "RUN_ROOM", "class_name": "RunRoom" },
+    ],
   },
   "migrations": [
     {
       "tag": "v1",
-      "new_sqlite_classes": ["RunRoom"],
+      "new_sqlite_classes": ["ProgressRoom", "RunRoom"],
+    },
+  ],
+
+  // D1. `migrations_dir` on WF_DB points into the 007 submodule, so
+  // `bun run db:migrate:wf[:local]` from this package applies 007's schema.
+  // TODO: create both databases (`bunx wrangler d1 create <name>`), paste the
+  // ids, and keep them in sync with apps/web and packages/db.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "kyoto-db",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+    },
+    {
+      "binding": "WF_DB",
+      "database_name": "kyoto-wf",
+      "database_id": "00000000-0000-0000-0000-000000000001",
+      "migrations_dir": "../../packages/007/migrations",
+    },
+  ],
+
+  // Cloudflare Email Sending. TODO: allowed sender(s) — keep in sync with apps/web.
+  "send_email": [
+    {
+      "name": "EMAIL",
+      "allowed_sender_addresses": ["noreply@example.com"],
     },
   ],
 
@@ -65,7 +107,8 @@
     "crons": ["0 3 * * *"],
   },
 
-  // Vars (non-secret) — set with `wrangler secret put` for sensitive values.
+  // Vars (non-secret). Secrets via `wrangler secret put`: TOKEN_SIGNING_KEY,
+  // OPENROUTER_API_KEY, WF_CONNECTOR_KEY (same value as apps/web).
   // Browser uses PUBLIC_BASE_URL to subscribe to SSE/WS endpoints directly.
   "vars": {
     "PUBLIC_BASE_URL": "http://localhost:8787",

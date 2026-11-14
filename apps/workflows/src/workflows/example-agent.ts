@@ -16,7 +16,9 @@ export class ExampleAgent extends WorkflowEntrypoint<Env, Params> {
   ): Promise<ExampleAgentOutput> {
     const { runId, ...rest } = event.payload
     const { name = 'World' } = workflowInputs['example-agent'].parse(rest)
-    const room = this.env.RUN_ROOM.get(this.env.RUN_ROOM.idFromName(runId))
+    const room = this.env.PROGRESS_ROOM.get(
+      this.env.PROGRESS_ROOM.idFromName(runId),
+    )
 
     await step.do('start', async () => {
       await room.setStatus('running')

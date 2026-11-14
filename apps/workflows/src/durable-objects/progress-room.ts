@@ -17,7 +17,7 @@ interface PersistedState {
  * - State is persisted in the DO's SQLite-backed storage so reconnecting
  *   clients can replay the run from the beginning.
  */
-export class RunRoom extends DurableObject<Env> {
+export class ProgressRoom extends DurableObject<Env> {
   private memo: PersistedState | null = null
 
   private async load(): Promise<PersistedState> {

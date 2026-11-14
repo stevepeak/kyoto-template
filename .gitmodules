@@ -1,0 +1,3 @@
+[submodule "packages/007"]
+	path = packages/007
+	url = https://github.com/stevepeak/007.git
