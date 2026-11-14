@@ -1,6 +1,14 @@
 'use client'
 
-import { House, type LucideIcon, Mail, Menu, Workflow, X } from 'lucide-react'
+import {
+  House,
+  ListChecks,
+  type LucideIcon,
+  Mail,
+  Menu,
+  Workflow,
+  X,
+} from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { type ReactNode, useState } from 'react'
@@ -19,11 +27,10 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/emails', label: 'Emails', icon: Mail },
 ]
 
-const WORKFLOWS_NAV_ITEM: NavItem = {
-  href: '/workflows',
-  label: '007 Workflows',
-  icon: Workflow,
-}
+const ADMIN_NAV_ITEMS: NavItem[] = [
+  { href: '/workflows', label: '007 Workflows', icon: Workflow },
+  { href: '/setup', label: 'Setup', icon: ListChecks },
+]
 
 function isActive(pathname: string, href: string): boolean {
   return href === '/' ? pathname === '/' : pathname.startsWith(href)
@@ -33,15 +40,11 @@ interface AppShellProps {
   children: ReactNode
   /** The server-read session user, used until the client session resolves. */
   initialUser: AccountUser | null
-  /** Show the 007 console entry in the sidebar nav. */
-  canUseWorkflows: boolean
+  /** Show the admin entries (007 console, setup) in the sidebar nav. */
+  isAdmin: boolean
 }
 
-export function AppShell({
-  children,
-  initialUser,
-  canUseWorkflows,
-}: AppShellProps) {
+export function AppShell({ children, initialUser, isAdmin }: AppShellProps) {
   const pathname = usePathname()
   const { data: session, isPending } = authClient.useSession()
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -66,9 +69,7 @@ export function AppShell({
     )
   }
 
-  const navItems = canUseWorkflows
-    ? [...NAV_ITEMS, WORKFLOWS_NAV_ITEM]
-    : NAV_ITEMS
+  const navItems = isAdmin ? [...NAV_ITEMS, ...ADMIN_NAV_ITEMS] : NAV_ITEMS
 
   const sidebar = (
     <div className="flex h-full flex-col">

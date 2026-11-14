@@ -1,4 +1,4 @@
-import { isGoogleEnabled } from './auth'
+import { isGoogleEnabled, turnstileSiteKey } from './auth'
 import { PRODUCT_NAME } from './brand'
 import { cfEnv, cfVar } from './cf-env'
 import { PRIVACY_POLICY } from './legal/privacy-policy'
@@ -62,7 +62,7 @@ export function getSetupChecklist(): SetupItem[] {
     {
       id: 'email',
       title: 'Email sending',
-      why: 'Password resets and security notices. Until set, emails are only logged.',
+      why: 'Sign-up confirmation, password resets and security notices. Email/password sign-ups can’t finish without it — until set, emails are only logged.',
       how: 'Onboard a domain to Cloudflare Email Sending, set EMAIL_FROM (and EMAIL_FROM_NAME) in wrangler.jsonc, and list the address in send_email.allowed_sender_addresses.',
       done: Boolean(cfEnv().EMAIL && cfVar('EMAIL_FROM')),
       required: true,
@@ -82,6 +82,14 @@ export function getSetupChecklist(): SetupItem[] {
       how: 'Set WF_ADMIN_EMAILS (comma-separated) in wrangler.jsonc vars.',
       done: Boolean(cfVar('WF_ADMIN_EMAILS')),
       required: true,
+    },
+    {
+      id: 'turnstile',
+      title: 'Bot protection (Turnstile)',
+      why: 'Stops scripted sign-ups, password guessing and reset-email spam. Free with a Cloudflare account.',
+      how: 'Cloudflare dashboard → Turnstile → Add widget (Managed) for your hostname. Set TURNSTILE_SITE_KEY in wrangler.jsonc vars and `wrangler secret put TURNSTILE_SECRET_KEY`.',
+      done: turnstileSiteKey() !== null,
+      required: false,
     },
     {
       id: 'google',

@@ -3,6 +3,14 @@
     "007": {
       "type": "http",
       "url": "http://localhost:3000/api/wf/mcp/write"
+    },
+    "template-project": {
+      "type": "http",
+      "url": "http://localhost:3000/api/mcp"
+    },
+    "cloudflare": {
+      "type": "http",
+      "url": "https://mcp.cloudflare.com/mcp"
     }
   }
 }

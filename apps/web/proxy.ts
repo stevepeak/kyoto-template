@@ -2,7 +2,7 @@ import { getSessionCookie } from 'better-auth/cookies'
 import { type NextRequest, NextResponse } from 'next/server'
 
 // TODO: list the routes that require a signed-in user.
-const protectedRoutes = ['/emails', '/settings', '/workflows']
+const protectedRoutes = ['/emails', '/settings', '/setup', '/workflows']
 const authRoutes = ['/login', '/forgot-password']
 
 /**

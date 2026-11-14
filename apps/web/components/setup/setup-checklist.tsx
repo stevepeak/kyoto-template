@@ -73,7 +73,7 @@ export function SetupChecklist({ items }: { items: SetupItem[] }) {
           <p className="mt-0.5 text-sm text-gray-500">
             {todo.length === 0
               ? 'Everything this deployment can check is configured.'
-              : `${done.length} of ${items.length} done. Only admins see this.`}
+              : `${done.length} of ${items.length} done.`}
           </p>
         </div>
         <div className="mt-1 h-1.5 w-24 shrink-0 overflow-hidden rounded-full bg-gray-200">

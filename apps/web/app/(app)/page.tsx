@@ -1,16 +1,10 @@
 import { headers } from 'next/headers'
 import Link from 'next/link'
 
-import { SetupChecklist } from '@/components/home/setup-checklist'
 import { getAuth } from '@/lib/auth'
-import { getSetupChecklist } from '@/lib/setup-checklist'
-import { canUseWorkflows } from '@/lib/wf-access'
 
 export default async function HomePage() {
   const session = await getAuth().api.getSession({ headers: await headers() })
-  // The setup list names unset secrets, so only admins (the 007 allowlist —
-  // any signed-in user under `next dev`) see it.
-  const showSetup = session ? canUseWorkflows(session.user.email) : false
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-8 p-8">
@@ -35,7 +29,6 @@ export default async function HomePage() {
           Sign in
         </Link>
       )}
-      {showSetup ? <SetupChecklist items={getSetupChecklist()} /> : null}
     </main>
   )
 }
