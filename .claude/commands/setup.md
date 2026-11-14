@@ -66,7 +66,9 @@ in sync:
   `name`, and web's `services[].service` (must equal the workflows name).
 - D1 `database_name` in all three wrangler files (`apps/web`, `apps/workflows`,
   `packages/db`) plus the `db:migrate*` scripts in `packages/db/package.json`;
-  R2 bucket name (web); queue + DLQ names (workflows). Rename the `-staging`
+  R2 bucket names — avatars (web) and uploads (web + workflows; rename the
+  `bucket_name` only — 007's built-ins read the `UPLOADS` binding by name); the
+  Vectorize index (web + workflows); queue + DLQ names (workflows). Rename the `-staging`
   twins in each file's `env.staging` block the same way, and the staging
   Worker names in `.github/workflows/ci.yml` (`preview` job URLs).
 
@@ -77,7 +79,13 @@ Create what's missing, then paste ids back:
 - **D1 ×2** — app DB and 007's WF DB. Ask for a location hint / jurisdiction
   first. Put each id into every wrangler file that binds it (app DB: all three;
   WF DB: web + workflows) and the app DB id into `.env` `D1_DATABASE_ID`.
-- **R2** — the avatars bucket.
+- **R2** — the avatars bucket and the uploads bucket (007's built-in
+  `extract_text` reads it, `create_document` writes to it).
+- **Vectorize** — the documents index (dimensions must match BGE-M3):
+  `wrangler vectorize create <prefix>-documents --dimensions=1024 --metric=cosine`.
+- Workers AI and Browser Rendering need nothing created — both are bound
+  `remote: true`, so `wrangler dev` uses the account's real ones (needs
+  `wrangler login`).
 - **Queues** — the notifications queue and its dead-letter queue.
 - Workflows and Durable Objects are created by the first deploy — nothing to do.
 
@@ -163,7 +171,8 @@ pair and staging D1s/bucket/queues (`env.staging` in all three wrangler files,
 `preview` job in `.github/workflows/ci.yml`). Ask whether they want it; if so:
 
 - Create `<prefix>-db-staging`, `<prefix>-wf-staging`, the
-  `<prefix>-avatars-staging` bucket and the staging queue + DLQ; paste the ids
+  `<prefix>-avatars-staging` and `<prefix>-uploads-staging` buckets, the
+  `<prefix>-documents-staging` Vectorize index, and the staging queue + DLQ; paste the ids
   into each `env.staging` block.
 - Look up the account's workers.dev subdomain (MCP:
   `/accounts/{id}/workers/subdomain`); set `PUBLIC_BASE_URL` in the workflows

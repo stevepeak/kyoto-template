@@ -1,7 +1,8 @@
-import { headers } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import type { ReactNode } from 'react'
 
 import { AppShell } from '@/components/app-shell/app-shell'
+import { SIDEBAR_COLLAPSED_COOKIE } from '@/components/app-shell/nav'
 import { getAuth } from '@/lib/auth'
 import { getSetupChecklist } from '@/lib/setup-checklist'
 import { canUseWorkflows } from '@/lib/wf-access'
@@ -24,6 +25,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     : null
   const isAdmin = canUseWorkflows(user?.email)
   const checklist = isAdmin ? getSetupChecklist() : []
+  const cookieStore = await cookies()
+  const initialCollapsed =
+    cookieStore.get(SIDEBAR_COLLAPSED_COOKIE)?.value === 'true'
 
   return (
     <AppShell
@@ -38,6 +42,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           : null
       }
       isImpersonating={Boolean(session?.session.impersonatedBy)}
+      initialCollapsed={initialCollapsed}
     >
       {children}
     </AppShell>

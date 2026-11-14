@@ -13,6 +13,15 @@ export type HostEnv = {
   WF_DB: D1Database
   /** The app database — for tools that read/write app tables. */
   DB?: D1Database
+  /** Workers AI — embeds text for the document tools (`tools/documents.ts`). */
+  AI?: Ai
+  /**
+   * Vectorize index of document chunks (1024-dim cosine, BGE-M3). Optional so
+   * a host without it still boots; the document tools fail with a clear error.
+   */
+  DOCUMENTS_INDEX?: Vectorize
+  // UPLOADS (R2) and BROWSER are read by 007's built-in tools straight off the
+  // run env — see packages/007/src/cloudflare/builtin-tools.ts.
   /** OpenRouter key — the model provider boundary (`model.ts`). */
   OPENROUTER_API_KEY?: string
   /**

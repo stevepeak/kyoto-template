@@ -33,6 +33,16 @@ declare global {
       // App database.
       DB: D1Database
 
+      // Workers AI + Vectorize — the 007 document tools.
+      AI: Ai
+      DOCUMENTS_INDEX: Vectorize
+
+      // R2: documents for 007's extract_text / create_document.
+      UPLOADS: R2Bucket
+
+      // Browser Rendering — extract_text's scanned-PDF OCR.
+      BROWSER: Fetcher
+
       // Cloudflare Email Sending.
       EMAIL: SendEmail
 

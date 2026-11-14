@@ -24,6 +24,15 @@ declare global {
 
     // R2: user-uploaded profile pictures.
     AVATARS: R2Bucket
+    // R2: documents for 007's extract_text / create_document (tool previews).
+    UPLOADS: R2Bucket
+
+    // Workers AI + Browser Rendering — extract_text's toMarkdown and OCR.
+    AI: Ai
+    BROWSER: Fetcher
+
+    // Vectorize — the document tools' chunk index (tool previews).
+    DOCUMENTS_INDEX: Vectorize
 
     // Vars
     APP_URL?: string

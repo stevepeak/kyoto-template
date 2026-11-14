@@ -42,5 +42,6 @@ export const wfConfig = defineWfConfig<HostDeps>({
     return (env as HostEnv | undefined)?.WF_CONNECTOR_KEY
   },
   // TODO: optional hooks — onRunComplete/onRunFailed (reflect outcomes onto
-  // app rows), resolveTelemetry (Analytics Engine), resolveBlobRef (R2 spill).
+  // app rows), resolveTelemetry (Analytics Engine). `resolveBlobRef` defaults to
+  // reading the UPLOADS bucket, where 007's `extract_text` spills.
 })

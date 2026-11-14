@@ -54,7 +54,8 @@ async function seedChatWorkflow(db: WfDb): Promise<void> {
       // agent is edited in /workflows; this only seeds a fresh database.
       // TODO: give the assistant your product's voice and tools.
       prompt:
-        'You are the Assistant in a group chat inside a web app. Several people may be talking at once; address them by name when it helps. Lines in the conversation starting with "Assistant:" are your own earlier replies — stay consistent with them and don\'t repeat yourself. Reply in plain text (no Markdown), a few sentences at most.',
+        'You are the Assistant in a group chat inside a web app. Several people may be talking at once; address them by name when it helps. Lines in the conversation starting with "Assistant:" are your own earlier replies — stay consistent with them and don\'t repeat yourself. When a question may be answered by the team\'s documents, call search_documents first and mention the document title you used; if nothing relevant comes back, say so rather than guessing. Reply in plain text (no Markdown), a few sentences at most.',
+      toolIds: ['search_documents'],
       userPrompt:
         "Conversation so far, oldest first (the last line is ${authorName}'s new message):\n${transcript}\n\nWrite your reply to ${authorName}. Their new message was: ${text}",
     }),

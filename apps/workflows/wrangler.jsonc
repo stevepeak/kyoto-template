@@ -86,6 +86,26 @@
     },
   ],
 
+  // Workers AI + Vectorize — the 007 document tools (packages/wf-host/src/tools/documents.ts).
+  // Vectorize has no local simulator, so `wrangler dev` uses the real index.
+  // TODO: create the index once —
+  //   bunx wrangler vectorize create template-documents --dimensions=1024 --metric=cosine
+  "ai": { "binding": "AI" },
+  "vectorize": [
+    {
+      "binding": "DOCUMENTS_INDEX",
+      "index_name": "template-documents",
+      "remote": true,
+    },
+  ],
+
+  // Uploaded documents — read by 007's `extract_text`, written by
+  // `create_document`. Same bucket as apps/web (tool previews run there).
+  "r2_buckets": [{ "binding": "UPLOADS", "bucket_name": "template-uploads" }],
+
+  // Browser Rendering — rasterizes scanned PDFs for `extract_text`'s OCR.
+  "browser": { "binding": "BROWSER", "remote": true },
+
   // Cloudflare Email Sending. TODO: allowed sender(s) — keep in sync with apps/web.
   "send_email": [
     {
@@ -184,6 +204,17 @@
           "migrations_dir": "../../packages/007/migrations",
         },
       ],
+      "ai": { "binding": "AI" },
+      "vectorize": [
+        {
+          "binding": "DOCUMENTS_INDEX",
+          "index_name": "template-documents-staging",
+        },
+      ],
+      "r2_buckets": [
+        { "binding": "UPLOADS", "bucket_name": "template-uploads-staging" },
+      ],
+      "browser": { "binding": "BROWSER" },
       "send_email": [
         {
           "name": "EMAIL",

@@ -52,6 +52,8 @@ packages/007/      git submodule (separate repo) — don't edit from here
 - **Database:** to change the schema, edit only `packages/db/src/*.ts` (tables
   re-exported from `schema.ts`). NEVER edit `packages/db/migrations`, and never
   run `db:generate` or `db:migrate` — the user does that.
+- **Git:** NEVER create git branches (no `git checkout -b`, `git switch -c`,
+  `git branch <name>`, worktrees). Work on the current branch, even `main`.
 - Don't change any `tsconfig.json` without asking first and explaining why.
 - Don't edit `apps/web/components/ui` (shadcn-generated, if added).
 - **Status:** in development, no users. Breaking changes are fine; don't keep

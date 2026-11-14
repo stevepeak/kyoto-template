@@ -38,8 +38,27 @@
     },
   ],
 
-  // User-uploaded profile pictures, served back through /api/avatar.
-  "r2_buckets": [{ "binding": "AVATARS", "bucket_name": "template-avatars" }],
+  // AVATARS: user-uploaded profile pictures, served back through /api/avatar.
+  // UPLOADS: documents for 007's `extract_text` / `create_document` — bound
+  // here too because the console's tool and agent previews run in this Worker.
+  "r2_buckets": [
+    { "binding": "AVATARS", "bucket_name": "template-avatars" },
+    { "binding": "UPLOADS", "bucket_name": "template-uploads" },
+  ],
+
+  // Workers AI + Browser Rendering for `extract_text` (same as apps/workflows).
+  // `remote: true`: neither runs locally, so dev uses the real ones.
+  "ai": { "binding": "AI", "remote": true },
+  "browser": { "binding": "BROWSER", "remote": true },
+  // Vectorize — the 007 document tools, for the tool/agent playgrounds. Same
+  // index as apps/workflows; `remote: true` because it has no local simulator.
+  "vectorize": [
+    {
+      "binding": "DOCUMENTS_INDEX",
+      "index_name": "template-documents",
+      "remote": true,
+    },
+  ],
 
   // Cloudflare Email Sending. No local simulator: in dev, sends are logged.
   // TODO: onboard the sending domain and set the allowed sender(s).
@@ -92,6 +111,15 @@
       ],
       "r2_buckets": [
         { "binding": "AVATARS", "bucket_name": "template-avatars-staging" },
+        { "binding": "UPLOADS", "bucket_name": "template-uploads-staging" },
+      ],
+      "ai": { "binding": "AI" },
+      "browser": { "binding": "BROWSER" },
+      "vectorize": [
+        {
+          "binding": "DOCUMENTS_INDEX",
+          "index_name": "template-documents-staging",
+        },
       ],
       "send_email": [
         {

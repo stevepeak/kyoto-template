@@ -20,6 +20,7 @@
     "@openrouter/ai-sdk-provider": "catalog:",
     "@stevepeak/007": "workspace:*",
     "ai": "catalog:",
+    "docx": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

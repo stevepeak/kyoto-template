@@ -7,6 +7,9 @@ import {
   Workflow,
 } from 'lucide-react'
 
+/** Remembers the desktop sidebar's collapsed state; read by the app layout. */
+export const SIDEBAR_COLLAPSED_COOKIE = 'sidebar-collapsed'
+
 export type NavItem = { href: string; label: string; icon: LucideIcon }
 
 // TODO: the app's primary navigation.

@@ -93,10 +93,12 @@ function ThemeSwitcher() {
 
 interface AccountMenuProps {
   user: AccountUser
+  /** Avatar only, for the collapsed sidebar rail. */
+  collapsed: boolean
 }
 
 /** The account button pinned to the bottom of the sidebar, and its popover. */
-export function AccountMenu({ user }: AccountMenuProps) {
+export function AccountMenu({ user, collapsed }: AccountMenuProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -129,7 +131,9 @@ export function AccountMenu({ user }: AccountMenuProps) {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 bottom-full left-0 z-50 mb-2 rounded-lg border border-gray-200 bg-white p-1 shadow-lg"
+          className={`absolute bottom-full left-0 z-50 mb-2 rounded-lg border border-gray-200 bg-white p-1 shadow-lg ${
+            collapsed ? 'w-60' : 'right-0'
+          }`}
         >
           <div className="flex items-center gap-2 px-2 py-2">
             <Avatar user={user} />
@@ -184,14 +188,22 @@ export function AccountMenu({ user }: AccountMenuProps) {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex w-full items-center gap-2 rounded-md p-2 hover:bg-gray-100"
+        aria-label={collapsed ? 'Account' : undefined}
+        title={collapsed ? (user.name ?? user.email) : undefined}
+        className={`flex w-full items-center gap-2 rounded-md hover:bg-gray-100 ${
+          collapsed ? 'justify-center p-1' : 'p-2'
+        }`}
       >
         <Avatar user={user} />
-        <UserLabel user={user} />
-        <ChevronsUpDown
-          className="h-4 w-4 shrink-0 text-gray-400"
-          aria-hidden="true"
-        />
+        {!collapsed && (
+          <>
+            <UserLabel user={user} />
+            <ChevronsUpDown
+              className="h-4 w-4 shrink-0 text-gray-400"
+              aria-hidden="true"
+            />
+          </>
+        )}
       </button>
     </div>
   )
