@@ -6,6 +6,8 @@ export * from './oauth-schema'
 export * from './audit-schema'
 // Per-user email category opt-outs
 export * from './notification-schema'
+// Stripe subscriptions (Better Auth `stripe()` plugin)
+export * from './billing-schema'
 
 // TODO: add your app tables here (or in sibling files re-exported from here),
 // then run `bun run --cwd packages/db db:generate`.

@@ -22,6 +22,7 @@ two MCP servers behind OAuth.
 | **007** — workflow authoring console at `/workflows`, durable runs in the workflows Worker, its own D1 (`WF_DB`)                                                                                                                            | `packages/007` (submodule), `packages/wf-host`                                                                    |
 | **MCP** — app MCP at `/api/mcp` (`whoami`), 007 MCP at `/api/wf/mcp[/write]`; OAuth 2.1 via better-auth `mcp()` with dynamic client registration and a consent screen                                                                       | `apps/web/lib/app-mcp.ts`, `lib/wf-mcp.ts`                                                                        |
 | **React Email** — templates + render to `{subject, html, text}`, sent through the Cloudflare `EMAIL` binding (logged in dev)                                                                                                                | `packages/email`, `apps/web/lib/email.ts`                                                                         |
+| **Billing** — Stripe via better-auth's plugin: 3-tier `/pricing` with a popular tag, Checkout, billing portal, webhook-synced subscriptions, Settings → Billing with past invoices and a per-invoice view; Stripe sends receipts            | `apps/web/lib/billing`, `components/billing`                                                                      |
 | **Legal pages** — `/privacy` and `/terms` templates with a "Draft" banner until finalised                                                                                                                                                   | `apps/web/lib/legal`                                                                                              |
 
 ## Quick start
@@ -117,7 +118,8 @@ staging resources.
 Worker secrets (`wrangler secret put …` in each app):
 `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_SECRET`, `TURNSTILE_SECRET_KEY`, `OPENROUTER_API_KEY`,
 `WF_CONNECTOR_KEY` (same value on both Workers), `TOKEN_SIGNING_KEY` (workflows),
-`SENTRY_DSN` (both Workers).
+`SENTRY_DSN` (both Workers), `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` (web,
+optional — billing is off without them).
 
 The web Worker's entry is `apps/web/worker.ts` — OpenNext's generated handler
 wrapped with Sentry — so `wrangler` needs a `build:cloudflare` first.
@@ -137,6 +139,10 @@ Everything below is a `TODO` in code. Nothing here was decided for you.
 - **Email:** sending domain/sender (`EMAIL_FROM` + `allowed_sender_addresses`),
   brand colours, footer, template copy, whether to send the welcome email.
 - **Legal:** every `[TODO]` in `/privacy` and `/terms` — have counsel review.
+- **Billing:** plans, prices and limits (`lib/billing/plans.ts`, then
+  `bun run --cwd apps/web stripe:sync`); free tier or none (`planLimits`);
+  annual pricing, trials, Stripe Tax (`getCheckoutSessionParams`); which
+  Stripe customer emails to turn on. `/setup billing` walks through it.
 - **007:** who may use `/workflows` (`lib/wf-access.ts`; currently a
   `WF_ADMIN_EMAILS` allowlist, open to any signed-in user only in dev),
   models/provider, tools, triggers, run-scope identity, telemetry; whether to

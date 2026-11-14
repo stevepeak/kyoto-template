@@ -7,6 +7,7 @@ import {
 import { apiKey } from '@better-auth/api-key'
 import { mcp } from '@better-auth/mcp'
 import { passkey } from '@better-auth/passkey'
+import { stripe } from '@better-auth/stripe'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import {
@@ -17,6 +18,8 @@ import {
 import { admin, captcha, jwt, lastLoginMethod } from 'better-auth/plugins'
 
 import { recordAuditEvent, requestOrigin } from './audit'
+import { PLANS } from './billing/plans'
+import { getStripe, stripeConfig } from './billing/stripe'
 import { cfVar } from './cf-env'
 import { getDb } from './db'
 import { sendEmail } from './email'
@@ -219,6 +222,8 @@ export function turnstileSiteKey(): string | null {
 export function getAuth(db: DB = getDb()) {
   const google = googleConfig()
   const turnstile = turnstileConfig()
+  const billing = stripeConfig()
+  const stripeClient = getStripe()
   const wfResource = resourceUrl(WF_MCP_PATH)
   const appResource = resourceUrl(APP_MCP_PATH)
 
@@ -369,6 +374,35 @@ export function getAuth(db: DB = getDb()) {
           ]
         : []),
       lastLoginMethod(),
+      // Stripe subscriptions: checkout (`/subscription/upgrade`), the billing
+      // portal, cancel/restore, and the webhook at /api/auth/stripe/webhook
+      // that keeps the `subscription` table in sync. Off without both keys.
+      // The Stripe customer is created at first checkout, not at sign-up.
+      ...(billing && stripeClient
+        ? [
+            stripe({
+              stripeClient,
+              stripeWebhookSecret: billing.webhookSecret,
+              createCustomerOnSignUp: false,
+              subscription: {
+                enabled: true,
+                requireEmailVerification: true,
+                plans: PLANS.map((plan) => ({
+                  name: plan.id,
+                  lookupKey: plan.lookupKey,
+                })),
+                getCheckoutSessionParams: () => ({
+                  params: {
+                    allow_promotion_codes: true,
+                    // TODO: Stripe Tax (`automatic_tax: { enabled: true }`)
+                    // and `billing_address_collection: 'required'` if you
+                    // charge tax; free trials via `subscription_data`.
+                  },
+                }),
+              },
+            }),
+          ]
+        : []),
       // `jwt()` signs the access tokens `mcp()` issues.
       jwt(),
       // OAuth 2.1 authorization server for MCP clients. Left out (rather than

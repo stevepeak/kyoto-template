@@ -43,6 +43,8 @@ declare global {
     WF_CONNECTOR_KEY?: string
     POSTHOG_API_KEY?: string
     SENTRY_DSN?: string
+    STRIPE_SECRET_KEY?: string
+    STRIPE_WEBHOOK_SECRET?: string
 
     // TODO: see lib/wf-access.ts — who may use the 007 console.
     WF_ADMIN_EMAILS?: string

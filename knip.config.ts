@@ -18,6 +18,8 @@ const config: KnipConfig = {
         'scripts/*.ts',
         // Product-email sender: no caller until the first optional email.
         'lib/notification-email.ts',
+        // `planLimits` — for gating features by plan; no caller yet.
+        'lib/billing/subscription.ts',
       ],
       project: ['**/*.{ts,tsx}'],
       // Loaded via `@plugin` in globals.css, which knip doesn't follow.

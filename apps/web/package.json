@@ -18,7 +18,8 @@
     "fix": "eslint --fix --quiet --ignore-pattern='.next' . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write .",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
-    "db:seed:local": "bun scripts/seed-demo-user.ts"
+    "db:seed:local": "bun scripts/seed-demo-user.ts",
+    "stripe:sync": "bun --env-file=../../.env scripts/stripe-sync-plans.ts"
   },
   "dependencies": {
     "@app/api": "workspace:*",
@@ -29,6 +30,7 @@
     "@better-auth/api-key": "^1.7.25",
     "@better-auth/mcp": "^1.7.25",
     "@better-auth/passkey": "^1.7.25",
+    "@better-auth/stripe": "^1.7.25",
     "@modelcontextprotocol/sdk": "^1.32.2",
     "@sentry/nextjs": "^11.12.0",
     "@stevepeak/007": "workspace:*",
@@ -45,6 +47,7 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "sonner": "^2.0.8",
+    "stripe": "^23.1.0",
     "zod": "catalog:"
   },
   "devDependencies": {

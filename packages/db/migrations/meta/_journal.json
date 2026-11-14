@@ -29,6 +29,13 @@
       "when": 1794686254047,
       "tag": "0003_numerous_praxagora",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1794690242829,
+      "tag": "0004_striped_odin",
+      "breakpoints": true
     }
   ]
 }

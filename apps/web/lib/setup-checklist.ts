@@ -1,4 +1,5 @@
 import { isGoogleEnabled, turnstileSiteKey } from './auth'
+import { isBillingEnabled } from './billing/stripe'
 import { PRODUCT_DESCRIPTION, PRODUCT_NAME } from './brand'
 import { cfEnv, cfVar } from './cf-env'
 import { PRIVACY_POLICY } from './legal/privacy-policy'
@@ -106,6 +107,14 @@ export function getSetupChecklist(): SetupItem[] {
       why: 'Stops scripted sign-ups, password guessing and reset-email spam. Free with a Cloudflare account.',
       how: 'Cloudflare dashboard → Turnstile → Add widget (Managed) for your hostname. Set TURNSTILE_SITE_KEY in wrangler.jsonc vars and `wrangler secret put TURNSTILE_SECRET_KEY`.',
       done: turnstileSiteKey() !== null,
+      required: false,
+    },
+    {
+      id: 'billing',
+      title: 'Billing (Stripe)',
+      why: 'Paid plans on /pricing, checkout, the billing portal and past invoices under Settings → Billing.',
+      how: `Set the plans in apps/web/lib/billing/plans.ts, then \`STRIPE_SECRET_KEY=sk_… bun run --cwd apps/web stripe:sync\` to create them in Stripe. Add a webhook endpoint for ${callbackBase}/api/auth/stripe/webhook (events: checkout.session.completed, customer.subscription.created/updated/deleted). \`wrangler secret put STRIPE_SECRET_KEY\` and \`STRIPE_WEBHOOK_SECRET\`. In Stripe → Settings → Customer emails, turn on receipts and invoice emails.`,
+      done: isBillingEnabled(),
       required: false,
     },
     {

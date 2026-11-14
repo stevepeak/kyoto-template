@@ -1,5 +1,5 @@
 ---
-description: Guided setup of this template on Cloudflare — names, D1/R2/Queues, secrets, email, Turnstile, Sentry, previews, CI
+description: Guided setup of this template on Cloudflare — names, D1/R2/Queues, secrets, email, Turnstile, Sentry, billing, previews, CI
 argument-hint: '[phase name to jump to, e.g. "turnstile"]'
 ---
 
@@ -94,14 +94,16 @@ Workers must exist before `wrangler secret put` targets them; if they don't,
 wrangler offers to create a draft — accept, or do this phase after the first
 deploy.
 
-| Secret               | Worker(s)                         | Source                  |
-| -------------------- | --------------------------------- | ----------------------- |
-| `BETTER_AUTH_SECRET` | web                               | generate                |
-| `TOKEN_SIGNING_KEY`  | workflows                         | generate                |
-| `WF_CONNECTOR_KEY`   | web **and** workflows, same value | generate (optional)     |
-| `OPENROUTER_API_KEY` | web, workflows                    | ask the user (optional) |
-| `POSTHOG_API_KEY`    | web                               | ask the user (optional) |
-| `SENTRY_DSN`         | web **and** workflows             | Sentry phase            |
+| Secret                  | Worker(s)                         | Source                  |
+| ----------------------- | --------------------------------- | ----------------------- |
+| `BETTER_AUTH_SECRET`    | web                               | generate                |
+| `TOKEN_SIGNING_KEY`     | workflows                         | generate                |
+| `WF_CONNECTOR_KEY`      | web **and** workflows, same value | generate (optional)     |
+| `OPENROUTER_API_KEY`    | web, workflows                    | ask the user (optional) |
+| `POSTHOG_API_KEY`       | web                               | ask the user (optional) |
+| `SENTRY_DSN`            | web **and** workflows             | Sentry phase            |
+| `STRIPE_SECRET_KEY`     | web                               | Billing phase           |
+| `STRIPE_WEBHOOK_SECRET` | web                               | Billing phase           |
 
 Check `wrangler secret list` first; don't overwrite an existing secret without
 asking.
@@ -174,7 +176,43 @@ pair and staging D1s/bucket/queues (`env.staging` in all three wrangler files,
   wins), use email/password only (Google and passkeys are tied to the
   production domain), and never index (`NOINDEX`).
 
-### 12. Optional features (ask which)
+### 12. Billing (Stripe, optional)
+
+Ask whether they want paid plans. Billing is off — the pricing buttons say
+so and Settings → Billing explains — until both Stripe secrets are set.
+
+- **Plans:** walk through `apps/web/lib/billing/plans.ts` with them — names,
+  monthly prices, features, which one is `popular`. Plan ids end up stored on
+  subscriptions, so settle them now.
+- **Keys:** have them paste a **test-mode** secret key (`sk_test_…`) into
+  `.env` `STRIPE_SECRET_KEY` themselves; never echo it. Then run
+  `bun run --cwd apps/web stripe:sync` — it creates a product + price per plan,
+  keyed by `lookupKey`, and is safe to re-run. Live mode later: same command
+  with the live key and `--live`.
+- **Webhook:** in Stripe → Developers → Webhooks, add
+  `https://<host>/api/auth/stripe/webhook` with events
+  `checkout.session.completed`, `customer.subscription.created`,
+  `customer.subscription.updated`, `customer.subscription.deleted`. Pipe its
+  signing secret into `wrangler secret put STRIPE_WEBHOOK_SECRET`, and the
+  live/test secret key into `wrangler secret put STRIPE_SECRET_KEY` (web).
+  Local dev: `stripe listen --forward-to localhost:3000/api/auth/stripe/webhook`
+  prints a `whsec_…` for `.env` — the user runs it.
+- **Billing portal:** Stripe → Settings → Billing → Customer portal — turn on
+  plan switching (add all three products), cancellation and payment-method
+  updates. "Switch plan" and "Manage billing" both land there.
+- **Emails:** Stripe sends them; nothing in `packages/email`. Stripe →
+  Settings → Customer emails: turn on **successful payments** (receipts) and
+  **refunds**; Settings → Billing → Subscriptions and emails: **send finalized
+  invoices**, **failed payment** reminders, **expiring card** and **upcoming
+  renewal** notices. Settings → Branding: logo, colours, and support email so
+  receipts and the hosted invoice page match the product.
+- **Tax:** ask whether they need Stripe Tax. If so, the TODO in
+  `getCheckoutSessionParams` (`apps/web/lib/auth.ts`) is where to turn on
+  `automatic_tax`.
+- **Legal:** remind them the privacy policy should name Stripe as a payment
+  processor, and the terms should cover renewals, refunds and cancellation.
+
+### 13. Optional features (ask which)
 
 - **Google sign-in** — guide them: Google Cloud → OAuth client, redirect URI
   `https://<host>/api/auth/callback/google`; `GOOGLE_CLIENT_ID` in vars,
@@ -182,7 +220,7 @@ pair and staging D1s/bucket/queues (`env.staging` in all three wrangler files,
 - **Workflow admins** — `WF_ADMIN_EMAILS` (comma-separated) in web vars.
 - **PostHog** — `NEXT_PUBLIC_POSTHOG_API_KEY` is build-time: GitHub secret.
 
-### 13. CI
+### 14. CI
 
 If a GitHub remote exists, ask, then `gh secret set` for
 `CLOUDFLARE_API_TOKEN` (needs D1:Edit + Workers Scripts:Edit — check the
@@ -190,7 +228,7 @@ token's permissions via the API first), `CLOUDFLARE_ACCOUNT_ID`, `APP_URL`, and
 any `NEXT_PUBLIC_*` / `SENTRY_*` values chosen above (`gh variable set` for
 `SENTRY_ORG`, `SENTRY_PROJECT`, `PREVIEW_DEPLOYS`, `CF_WORKERS_SUBDOMAIN`).
 
-### 14. Wrap-up
+### 15. Wrap-up
 
 - Run `bun run typecheck` to confirm the edited configs still check.
 - `git grep -n TODO -- ':!packages/007'` — list the remaining owner decisions

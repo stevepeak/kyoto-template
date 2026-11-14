@@ -2,7 +2,13 @@ import { PRIVACY_HREF, TERMS_HREF } from './legal/links'
 import { cfVar } from './cf-env'
 
 /** Pages worth indexing — everything else is behind sign-in or a token. */
-export const PUBLIC_PAGES = ['/', '/login', PRIVACY_HREF, TERMS_HREF]
+export const PUBLIC_PAGES = [
+  '/',
+  '/pricing',
+  '/login',
+  PRIVACY_HREF,
+  TERMS_HREF,
+]
 
 /**
  * Areas crawlers should skip even if they find a link: signed-in app pages,

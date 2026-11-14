@@ -2,6 +2,7 @@
 
 import {
   Bell,
+  CreditCard,
   KeySquare,
   type LucideIcon,
   Plug,
@@ -26,6 +27,7 @@ export const SETTINGS_GROUPS: SettingsGroup[] = [
       { href: '/settings', label: 'Profile', icon: UserCircle },
       { href: '/settings/notifications', label: 'Notifications', icon: Bell },
       { href: '/settings/security', label: 'Security', icon: Shield },
+      { href: '/settings/billing', label: 'Billing', icon: CreditCard },
       { href: '/settings/api-keys', label: 'API keys', icon: KeySquare },
       { href: '/settings/mcp', label: 'MCP', icon: Plug },
     ],

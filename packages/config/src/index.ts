@@ -60,6 +60,19 @@ const envSchema = z.object({
     'Cloudflare dashboard → Turnstile → widget → secret key',
   ),
 
+  // Stripe billing — subscriptions, checkout, billing portal, invoices. Both
+  // optional; the plugin (and the pricing buttons) are off when either is
+  // missing. Both are SECRETS: `wrangler secret put STRIPE_SECRET_KEY` and
+  // `STRIPE_WEBHOOK_SECRET`.
+  // TODO: create the products/prices (`bun run --cwd apps/web stripe:sync`)
+  // and a webhook for {APP_URL}/api/auth/stripe/webhook.
+  STRIPE_SECRET_KEY: optionalNonEmpty().describe(
+    'Stripe dashboard → Developers → API keys → secret key (sk_…)',
+  ),
+  STRIPE_WEBHOOK_SECRET: optionalNonEmpty().describe(
+    'Stripe dashboard → Developers → Webhooks → endpoint → signing secret (whsec_…)',
+  ),
+
   // Outbound email (Cloudflare Email Sending `EMAIL` binding). The sender must
   // also be listed in `send_email[].allowed_sender_addresses` in wrangler.jsonc.
   // TODO: choose the sending domain/address and display name.
